@@ -1,0 +1,31 @@
+{
+  "name": "instagram-scraping-teste",
+  "version": "1.0.0",
+  "description": "Scraping profile photos from instagram public account for free !!!",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rafael Francisco",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.6.1",
+    "bluebird": "^3.5.1",
+    "body-parser": "^1.18.3",
+    "cheerio": "^1.0.0-rc.2",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.4",
+    "ejs": "^2.6.1",
+    "errorhandler": "^1.5.0",
+    "express": "^4.16.3",
+    "fs": "0.0.1-security",
+    "http-errors": "^1.6.3",
+    "mongodb": "^3.1.1",
+    "mongoose": "^5.2.5",
+    "morgan": "^1.9.0",
+    "node-rest-client": "^3.1.0",
+    "path": "^0.12.7",
+    "request": "^2.87.0",
+    "request-cookies": "^1.1.0"
+  }
+}

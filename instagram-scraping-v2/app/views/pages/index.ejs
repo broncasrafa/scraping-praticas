@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>        
+</head>
+<body class="container">
+    <header>
+        <% include ../partials/header %>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                
+                $('#btnSearch').click(function() {
+                    var medias = [];
+                    var has_next_page = true;
+                    
+                    var dataInit = getUserScrapingInit($('#txtSearch').val());
+                    var user = dataInit.entry_data.ProfilePage[0].graphql.user;
+                    var page_info = user.edge_owner_to_timeline_media.page_info;
+                    var edges_init = user.edge_owner_to_timeline_media.edges;
+                    var userId = user.id;
+                    var end_cursor = page_info.end_cursor;
+
+                    edges_init.forEach(item => {
+                        medias.push(item.node);
+                    });
+
+                    if(page_info.has_next_page) {
+                        do {
+                            var dataOthers = getUserScrapingOther(userId, end_cursor);
+                            var dataUser = dataOthers.user;
+                            var timeline_media = dataUser.edge_owner_to_timeline_media;
+                            
+                            if(!timeline_media.page_info.has_next_page) {
+                                has_next_page = false;
+                            }
+
+                            end_cursor = timeline_media.page_info.end_cursor;
+
+                            var edges_others = timeline_media.edges;
+
+                            edges_others.forEach(item => {
+                                medias.push(item.node);
+                            })
+
+                        } while(has_next_page)
+                    }
+
+                    //console.log(medias);
+                    var medias_json = {};
+                    medias_json.medias_to_download = [];
+
+                    medias.forEach(item => {
+                        if(item.__typename == "GraphSidecar") {
+                            var sidecarImages = getSidecarImages(item.shortcode);
+
+                            sidecarImages.edges.forEach(img => {
+                                var json = {};
+                                json.media_id = img.node.id;
+                                json.user_id = user.id;
+                                json.url = img.node.display_url;
+                                medias_json.medias_to_download.push(json);
+                            })
+
+                        } else if(item.__typename == "GraphVideo") {
+                            var video = getVideoUrl(item.shortcode);
+                            var json = {};
+                            json.media_id = video.id;
+                            json.user_id = user.id;
+                            json.url = video.video_url;
+                            medias_json.medias_to_download.push(json);
+                        } else {
+                            var json = {};
+                            json.media_id = item.id;
+                            json.user_id = user.id;
+                            json.url = item.display_url;
+                            medias_json.medias_to_download.push(json);
+                        }
+                    });
+
+                    if(medias_json.medias_to_download.length > 0) {
+
+                        if(medias_json.medias_to_download.length > 100) {
+                            var my_array = medias_json.medias_to_download;
+                            var divisor = Math.ceil(my_array.length / 100);
+                            var qtdePartes = Math.ceil(my_array.length / divisor);
+                            var results = chunkArray(my_array, qtdePartes);
+                            
+                            results.forEach(function(lote) {
+                                downloadMedias(user.username, lote);
+                            });
+                        } else {
+                            //downloadMedias(user.username, medias_json.medias_to_download);
+                            medias_json.medias_to_download.forEach(item => {
+                                downloadMedias(user.username, item.url);
+                            });
+                        }
+
+                        var result = downloadMedias(user.username, medias_json);
+                        console.log(result);
+                    }
+                
+                
+                });// click do botão pesquisar
+
+            }); // load da pagina
+
+            function getUserScrapingInit(username) {
+                var jqXHR = $.ajax({
+                    url: '/user/getUserMediasInit/' + username,
+                    type: 'GET',
+                    async: false,
+                    dataType: 'json',
+                    success: function(resp) {
+                        console.log(resp);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+                var json = JSON.parse(jqXHR.responseText);
+                return json;
+            }
+
+            function getUserScrapingOther(userId, end_cursor) {
+                var jqXHR = $.ajax({
+                    url: '/user/getUserMediasOthers',
+                    type: 'GET',
+                    async: false,
+                    dataType: 'json',
+                    data: {
+                        'userId':userId,
+                        'end_cursor': end_cursor
+                    },
+                    success: function(resp) {
+                        console.log(resp);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+                var json = JSON.parse(jqXHR.responseText);
+                return json;
+            }
+        
+            function getVideoUrl(shortcode) {
+                var video_media = {};
+                
+                var url = 'https://www.instagram.com/p/' + shortcode + '/?__a=1';
+
+                var jqXHR = $.ajax({
+                    type: 'GET',
+                    url: url,
+                    dataType: 'json',
+                    async: false,
+                    success: function(resp) {
+                    },
+                    error: function(err) {
+                    }
+                });
+                var json = JSON.parse(jqXHR.responseText);
+                video_media = json.graphql.shortcode_media;
+                return video_media;
+            }
+
+            function getSidecarImages(shortcode) {
+                var shortcode_media = {};
+                var url = 'https://www.instagram.com/p/' + shortcode + '/?__a=1';
+                var jqXHR = $.ajax({
+                    type: 'GET',
+                    url: url,
+                    dataType: 'json',
+                    async: false,
+                    success: function(resp) {
+                        video_url = resp.graphql.shortcode_media;                    
+                    },
+                    error: function(err) {
+                    }
+                });
+                var json = JSON.parse(jqXHR.responseText);
+                shortcode_media = json.graphql.shortcode_media.edge_sidecar_to_children;
+                return shortcode_media;
+            }
+            
+            function downloadMedias(username, medias) {
+                var jqXHR = $.ajax({
+                    type: 'GET',
+                    url: '/download/downloadFotos',
+                    data: {
+                        'medias': JSON.stringify(medias),
+                        'username': username
+                    },
+                    success: function (data) {
+                    },
+                    error: function (err) {
+                    }
+                });
+                var json = JSON.parse(jqXHR.responseText);
+                return json;
+            }
+        
+            function chunkArray(myArray, chunck_size) {
+                var results = [];
+                while(myArray.length) {
+                    results.push(myArray.splice(0, chunck_size));
+                }
+                return results;
+            }
+        </script>
+    </header>
+    <main>
+        <div class="page-header">
+            <h1>Pagina inicial</h1>
+        </div>
+        <!-- Buscar -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group addon">
+                            <input type="search" class="form-control" name="search" id="txtSearch" placeholder="Digite o nome de usuário do Instagram" />
+                            <span class="input-group-addon btn btn-default btn-lg" id="btnSearch" style="margin-left: -1px;">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="hdn_end_cursor" id="hdn_end_cursor" />
+        <input type="hidden" name="hdn_id" id="hdn_id" />
+        <input type="hidden" name="hdn_hrx_gis" id="hdn_hrx_gis" />
+        <input type="hidden" name="hdn_csrf_token" id="hdn_csrf_token" />
+        <input type="hidden" name="hdn_has_next_page" id="hdn_has_next_page" />
+    </main>
+
+    <hr />
+    <footer>
+        <% include ../partials/footer %>
+    </footer>
+</body>
+</html>

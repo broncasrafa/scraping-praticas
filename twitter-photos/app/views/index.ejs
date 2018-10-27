@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include partials/_head.ejs %>
+
+    <script>
+        $(document).ready(function() {
+            
+
+            $('#txtSearch').keyup(function(e) {
+                e.preventDefault();
+                // Number 13 is the "Enter" key on the keyboard
+                if (e.keyCode === 13) {
+                    if ($('#txtSearch').val().length == 0) {
+                        showAlertMessage("Download", "Favor informar o username do Twitter!", TYPE_MSG_ERROR);
+                        return;
+                    }
+                    
+                    $('#mensagemModal').text("Carregando, aguarde um momento...");
+                    $.blockUI({
+                        message: $('#message'),
+                        css: { width: '275px' }
+                    });
+
+                    var loadingData = loadData();
+                    
+                    $.unblockUI();
+                }
+            });
+
+            $('#btnSearch').click(function () { 
+                if ($('#txtSearch').val().length == 0) {
+                    showAlertMessage("Download", "Favor informar o username do Twitter!", TYPE_MSG_ERROR);
+                    return;
+                }
+
+                $('#mensagemModal').text("Carregando, aguarde um momento...");
+                    $.blockUI({
+                        message: $('#message'),
+                        css: { width: '275px' }
+                    });
+
+                    var loadingData = loadData();
+                    
+                    $.unblockUI();
+            });
+
+        }) // fim do load da pagina
+
+
+        function loadData() {
+            var q = $('#txtSearch').val();
+            
+            var dataInit = getDataInit(q);
+            
+            if(dataInit.data.length > 0) {
+                
+                var medias_download = [];
+                var username = '';
+                var has_next_data = true;
+                
+                medias_download.push(dataInit.data.user.profile_image_url);
+                medias_download.push(dataInit.data.user.profile_banner_url);
+
+                for(var i = 0; i < dataInit.data.length; i++) {
+                    var data = dataInit.data[i];
+                    var user = data.user;
+                    username = user.screen_name;
+                    var has_extended_entities = data.extended_entities != null ? true : false;
+
+                    if(has_extended_entities) {
+                        var medias = data.extended_entities.media;
+                        if(medias.length > 0) {
+                            for(var j = 0; j < medias.length; j++) {
+                                var media = medias[j];
+
+                                if(media.type == "video") {
+                                    medias_download.push(media.media_url)
+
+                                    var video_info = media.video_info;
+                                    video_info.variants.forEach(item => {
+                                        if(item.content_type == 'video/mp4' && item.bitrate > 320000) {
+                                            medias_download.push(item.url)
+                                        }
+                                    })
+                                } else if(media.type == "animated_gif") {
+                                    medias_download.push(media.media_url)
+
+                                    var video_info = media.video_info;
+                                    video_info.variants.forEach(item => {
+                                        if(item.content_type == 'video/mp4' && item.bitrate == 0) {
+                                            medias_download.push(item.url)
+                                        }
+                                    })
+                                } else if(media.type == "photo") {
+                                    medias_download.push(media.media_url)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // realiza o download das medias iniciais
+                var json = downloadMedias(username, medias_download);
+                
+                var ultimoRegistro = dataInit.data.pop();
+                var max_id = ultimoRegistro.id;
+
+                has_next_data = hasNextData(username, max_id);
+                
+                if(has_next_data) {
+                    do {
+                        
+                        var otherData = getDataOthers(username, max_id);
+
+                        if(otherData.data.length == 0) {
+                            has_next_data = false;
+                            $.unblockUI();
+                            return;
+                        }
+                        
+                        medias_download = [];
+
+                        for(var i = 0; i < otherData.data.length; i++) {
+                            var data = otherData.data[i];
+                            
+                            var has_extended_entities = data.extended_entities != null ? true : false;
+
+                            if(has_extended_entities) {
+                                var medias = data.extended_entities.media;
+                                if(medias.length > 0) {
+                                    for(var j = 0; j < medias.length; j++) {
+                                        var media = medias[j];
+
+                                        if(media.type == "video") {
+                                            medias_download.push(media.media_url)
+
+                                            var video_info = media.video_info;
+                                            video_info.variants.forEach(item => {
+                                                if(item.content_type == 'video/mp4' && item.bitrate > 320000) {
+                                                    medias_download.push(item.url)
+                                                }
+                                            })
+                                        } else if(media.type == "animated_gif") {
+                                            medias_download.push(media.media_url)
+
+                                            var video_info = media.video_info;
+                                            video_info.variants.forEach(item => {
+                                                if(item.content_type == 'video/mp4' && item.bitrate == 0) {
+                                                    medias_download.push(item.url)
+                                                }
+                                            })
+                                        } else if(media.type == "photo") {
+                                            medias_download.push(media.media_url)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // realiza o download das medias demais
+                        var json = downloadMedias(username, medias_download);
+
+                        var ultimoRegistro = otherData.data.pop();
+                        max_id = ultimoRegistro.id;
+
+                        has_next_data = hasNextData(username, max_id);
+
+                    } while(has_next_data)
+                }
+                
+            } else {
+                return;
+            }
+        }
+
+    </script>
+
+</head>
+<body>
+    <!-- menu -->  
+    <% include partials/_navs.ejs %>
+
+
+    <div class="container">
+        <div class="jumbotron">
+            <h1>Download Twitter Medias</h1>
+            <p>
+                Uma forma muito pratica e rapida para realizar o download das fotos e videos da timeline do usuário do Twitter.
+                Divirta-se !!!!
+            </p>
+        </div>
+        <!-- Buscar -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group addon">
+                            <input type="search" class="form-control" name="search" id="txtSearch" placeholder="Digite o usuário do Twitter" />
+                            <span class="input-group-addon btn btn-default btn-lg" id="btnSearch" style="margin-left: -1px;">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de carregamento -->
+        <div class="modal-blockUI" id="message">
+            <h3 id="mensagemModal"></h3>
+            <p>
+                <img src="img/loading/loading_1.gif" style="width: 50px; height: 50px">
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <% include partials/_footer.ejs %>
+
+    </div>
+
+</body>
+</html>

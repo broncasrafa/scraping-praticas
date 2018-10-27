@@ -1,0 +1,28 @@
+body {
+    padding-top: 70px;
+    padding-bottom: 30px;
+}
+
+.input-group {
+    width: 100% !important;
+}
+
+
+/* Mensagem do modal do blockUI */
+#message {
+    padding: 10px;
+}
+
+.modal-blockUI {
+    display: none;
+    cursor: default;
+}
+
+.blockUI blockMsg blockPage .panel-body {
+    width: 420px !important;
+}
+
+.blockUI blockMsg blockPage {
+    width: 420px !important;
+}
+/* ----------------------------------------------  */

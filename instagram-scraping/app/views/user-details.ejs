@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title><%= title %></title>
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+        
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/app-scripts.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            
+            $('#btnLoadMoreFollowers').click(function() {
+
+                var userId = $('#hdn_userid').val();
+                var end_cursor = $('#hdn_end_cursor_followers').val();
+                var has_next_page = $('#hdn_has_next_page_followers').val();
+                
+
+                if(has_next_page == "true") {
+                    $('#btnLoadMoreFollowers').text('Carregando...');
+                    
+                    $.ajax({
+                        url: '/getUserFollowersOthers/' + userId,
+                        type: 'GET',
+                        dataType: 'json',
+                        data: {
+                            'end_cursor': end_cursor
+                        },
+                        success: function(response) {
+                            
+                            var data = response.data.user.edge_followed_by;
+                            var followers = data.edges;
+                            $('#hdn_has_next_page_followers').val(data.page_info.has_next_page);
+                            $('#hdn_end_cursor_followers').val(data.page_info.end_cursor);
+
+                            var strHtml = "";
+                            followers.forEach(item => {
+                                var follower = item.node;
+                                strHtml += '<div class="col-md-4 _i4wsm">';
+                                strHtml += '	<div class="_ikq0n">';
+                                strHtml += '		<div class="_82odm  _pbvu8">';
+                                strHtml += '			<canvas class="_15vpm" width="60" height="60" style="transform: translate(-5px, -5px); position: absolute; top: 0px; left: 0px; width: 60px; height: 60px;"></canvas> ';
+                                strHtml += '			<div class="_pg23k _jpwof _gvoze" style="width: 50px; height: 50px;">';
+                                strHtml += '				<a href="/user-details/'+ follower.username +'">';
+                                strHtml += '					<img class="_rewi8" src="'+ follower.profile_pic_url +'" alt="Foto do perfil de '+ follower.full_name + '">';
+                                strHtml += '				</a>';
+                                strHtml += '			</div>';
+                                strHtml += '		</div>';
+                                strHtml += '		<div class="_on99m">';
+                                strHtml += '			<div class="_8hjc5">';
+                                strHtml += '				<div class="_f89xq">';
+                                strHtml += '					<a href="/user-details/'+ follower.username + '">';
+                                strHtml += '						<span class="_username">'+ follower.username + '</span>';
+                                strHtml += '					</a>';
+                                strHtml += '					<br />';
+                                strHtml += '					<span class="_fullname">'+ follower.full_name + '</span>';
+                                strHtml += '				</div>';
+                                strHtml += '			</div>';
+                                strHtml += '		</div>';
+                                strHtml += '	</div>';
+                                strHtml += '</div>';
+                            });
+
+                            $(strHtml).appendTo('#divFollowers');
+
+                            $('#btnLoadMoreFollowers').text('Mais');
+                        },
+                        error: function(error) {
+
+                            $('#btnLoadMoreFollowers').text('Mais');
+                        }
+                    });
+                } else {
+                    $('#btnLoadMoreFollowers').hide();
+                }
+            });
+
+            $('#btnLoadMoreFollowing').click(function() {
+                var userId = $('#hdn_userid').val();
+                var end_cursor = $('#hdn_end_cursor_following').val();
+                var has_next_page = $('#hdn_has_next_page_following').val();
+                
+
+                if(has_next_page == "true") {
+                    $('#btnLoadMoreFollowing').text('Carregando...');
+                    
+                    $.ajax({
+                        url: '/getUserFollowingOthers/' + userId,
+                        type: 'GET',
+                        dataType: 'json',
+                        data: {
+                            'end_cursor': end_cursor
+                        },
+                        success: function(response) {
+                            
+                            var data = response.data.user.edge_follow;
+                            var followings = data.edges;
+                            $('#hdn_has_next_page_following').val(data.page_info.has_next_page);
+                            $('#hdn_end_cursor_following').val(data.page_info.end_cursor);
+
+                            var strHtml = "";
+                            followings.forEach(item => {
+                                var following = item.node;
+                                strHtml += '<div class="col-md-4 _i4wsm">';
+                                strHtml += '	<div class="_ikq0n">';
+                                strHtml += '		<div class="_82odm  _pbvu8">';
+                                strHtml += '			<canvas class="_15vpm" width="60" height="60" style="transform: translate(-5px, -5px); position: absolute; top: 0px; left: 0px; width: 60px; height: 60px;"></canvas> ';
+                                strHtml += '			<div class="_pg23k _jpwof _gvoze" style="width: 50px; height: 50px;">';
+                                strHtml += '				<a href="/user-details/'+ following.username +'">';
+                                strHtml += '					<img class="_rewi8" src="'+ following.profile_pic_url +'" alt="Foto do perfil de '+ following.full_name + '">';
+                                strHtml += '				</a>';
+                                strHtml += '			</div>';
+                                strHtml += '		</div>';
+                                strHtml += '		<div class="_on99m">';
+                                strHtml += '			<div class="_8hjc5">';
+                                strHtml += '				<div class="_f89xq">';
+                                strHtml += '					<a href="/user-details/'+ following.username + '">';
+                                strHtml += '						<span class="_username">'+ following.username + '</span>';
+                                strHtml += '					</a>';
+                                strHtml += '					<br />';
+                                strHtml += '					<span class="_fullname">'+ following.full_name + '</span>';
+                                strHtml += '				</div>';
+                                strHtml += '			</div>';
+                                strHtml += '		</div>';
+                                strHtml += '	</div>';
+                                strHtml += '</div>';
+                            });
+
+                            $(strHtml).appendTo('#divFollowing');
+
+                            $('#btnLoadMoreFollowing').text('Mais');
+                        },
+                        error: function(error) {
+
+                            $('#btnLoadMoreFollowing').text('Mais');
+                        }
+                    });
+                } else {
+                    $('#btnLoadMoreFollowing').hide();
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false"
+                    aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    <li>
+                        <a href="/search-from-instagram">Pesquisar no Instagram</a>
+                    </li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </nav>
+    <div class="jumbotron" style="background-color:#ffffff">
+        <div class="container">
+            <div class="col-md-3" style="padding-top: 80px;">
+                    <img class="featurette-image img-responsive img-circle center-block" data-src="holder.js/300x300/auto" src="<%= data.user.profile_pic_url_hd %>" alt="<%= data.user.username %>">
+            </div>
+            <div class="col-md-9">
+                <h1 class="featurette-heading">
+                    <%= data.user.username%>                    
+                </h1>
+                <div style="padding-top: 20px;color: #262626;">
+                    <div class="col-sm-4"><%= data.user.edge_owner_to_timeline_media.count %> publicações</div>
+                    <div class="col-sm-4"><%= data.user.edge_followed_by.count %> seguidores</div>
+                    <div class="col-sm-4">seguindo <%= data.user.edge_follow.count %></div>
+                </div>
+                <br />
+                <h4 style="color: #262626;">
+                    <%= data.user.full_name%>
+                    
+                    <% if(!data.user.is_private) { %>
+                        <span class="label label-primary" style="font-size: 50% !important; background-color: #337ab7 !important;">Pública</span>
+                    <% } else { %>
+                        <span class="label label-danger"  style="font-size: 50% !important">Privado</span>
+                    <% } %>                    
+                </h4>
+                
+                <p class="lead" style="color: #262626;">
+                    <%= data.user.biography %>
+                </p>
+            </div>
+            <input type="hidden" id="hdn_userid" value="<%= data.user.id %>">
+        </div>
+    </div>
+    <div class="container" style="padding-top: 40px">
+        <div class="row" style="margin-top: 40px;">
+            <div class="col-md-12">
+                <div class="grid" style="padding-right: 80px;">
+                        <% 
+                            var medias = data.user.edge_owner_to_timeline_media.edges;
+                            
+                            for(var i = 0; i < medias.length; i++) {
+                                var media =  medias[i].node;
+                        %>
+                        <div class="col-md-3" style="padding-bottom: 20px;">
+                            <img src="<%= media.display_url %>" class="responsive-image" style="width:243px; height:243px">
+                            <div style="background-color: #ffffff; height: 40px">
+                                <div style="padding: 10px 10px 10px 10px; font-size: 11pt;">
+                                    <i class="fa fa-heart" style="color: red;"></i> <span style="padding-left: 6px; padding-right: 10px; color: #000000"><%= media.edge_media_preview_like.count %></span>
+                                    <i class="fa fa-comment-o" style="color: black;"></i><span style="padding-left: 6px; padding-right: 10px; color: #000000"><%= media.edge_media_to_comment.count %></span>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+                    </div>
+    
+                    <% 
+                        if(data.stories.reels_media.length > 0) { 
+                            var items = [];
+    
+                            data.stories.reels_media.forEach(function(c) {
+                                c.items.forEach(function(it) {
+                                    items.push(it)
+                                })
+                            })
+                    %>
+                        <h2>Last Stories</h2>
+                        <div class="row">
+                            <div class="grid">
+                                <% for(var i = 0; i < items.length; i++) { %>
+                                    <div class="col-md-3" style="padding-bottom: 20px;">
+                                        <% if(items[i].__typename == "GraphStoryImage") { %>
+                                            <img src="<%= items[i].display_url %>" class="responsive-image" style="width:400px; height:400px">
+                                        <% } else if(items[i].__typename == "GraphStoryVideo") { %>
+                                            <div class="embed-responsive embed-responsive-16by9" style="width:400px; height:400px">
+                                                <video controls>
+                                                    <source type="video/mp4" src="<%= items[i].video_resources[0].src %>"></source>
+                                                </video>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } %>
+    
+                    <% 
+                        if(data.followersInit.edges.length > 0) {                           
+                    %>
+                        <h2>Seguidores</h2>
+                        <hr />
+                        <div class="row">
+                            <div style="overflow: auto; height: 500px;" id="divFollowers">
+                                <%
+                                    for(var i = 0; i < data.followersInit.edges.length; i++) {
+                                        var follower = data.followersInit.edges[i].node;
+                                %>                                                        
+                                    <div class="col-md-4 _i4wsm">
+                                        <div class="_ikq0n">
+                                            <div class="_82odm  _pbvu8">
+                                                <canvas class="_15vpm" width="60" height="60" style="transform: translate(-5px, -5px); position: absolute; top: 0px; left: 0px; width: 60px; height: 60px;"></canvas> 
+                                                <div class="_pg23k _jpwof _gvoze" style="width: 50px; height: 50px;">
+                                                    <a href="/user-details/<%= follower.username %>">
+                                                        <img class="_rewi8" src="<%= follower.profile_pic_url %>" alt="Foto do perfil de <%= follower.full_name %>">
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="_on99m">
+                                                <div class="_8hjc5">
+                                                    <div class="_f89xq">
+                                                        <a href="/user-details/<%= follower.username %>">
+                                                            <span class="_username"><%= follower.username %></span>
+                                                        </a>
+                                                        <br />
+                                                        <span class="_fullname"><%= follower.full_name %></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <% if(data.user.edge_followed_by.count > 50) { %>
+                            <div class="text-center">
+                                <input type="hidden" value="<%=data.followersInit.page_info.has_next_page %>" id="hdn_has_next_page_followers" />
+                                <input type="hidden" value="<%=data.followersInit.page_info.end_cursor %>" id="hdn_end_cursor_followers" />
+                                <button class="btn btn-success" id="btnLoadMoreFollowers">Mais</button>
+                            </div>
+                            <% } %>
+                        </div>
+                    <% } %>
+    
+                    
+    
+                    <% 
+                        if(data.followingInit.edges.length > 0) {                             
+                    %>
+                        <h2>Seguindo</h2>
+                        <hr />
+                        <div class="row">
+                            <div style="overflow: auto; height: 500px;" id="divFollowing">
+                                <%
+                                    for(var i = 0; i < data.followingInit.edges.length; i++) {
+                                        var following = data.followingInit.edges[i].node;
+                                %>                                                        
+                                    <div class="col-md-4 _i4wsm">
+                                        <div class="_ikq0n">
+                                            <div class="_82odm  _pbvu8">
+                                                <canvas class="_15vpm" width="60" height="60" style="transform: translate(-5px, -5px); position: absolute; top: 0px; left: 0px; width: 60px; height: 60px;"></canvas> 
+                                                <div class="_pg23k _jpwof _gvoze" style="width: 50px; height: 50px;">
+                                                    <a href="/user-details/<%= following.username %>">
+                                                        <img class="_rewi8" src="<%= following.profile_pic_url %>" alt="Foto do perfil de <%= following.full_name %>">
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="_on99m">
+                                                <div class="_8hjc5">
+                                                    <div class="_f89xq">
+                                                        <a href="/user-details/<%= following.username %>">
+                                                            <span class="_username"><%= following.username %></span>
+                                                        </a>
+                                                        <br />
+                                                        <span class="_fullname"><%= following.full_name %></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <% if(data.user.edge_follow.count > 50) { %>
+                            <div class="text-center">
+                                    <input type="hidden" value="<%=data.followingInit.page_info.has_next_page %>" id="hdn_has_next_page_following" />
+                                    <input type="hidden" value="<%=data.followingInit.page_info.end_cursor %>" id="hdn_end_cursor_following" />
+                                <button class="btn btn-success"  id="btnLoadMoreFollowing">Mais</button>
+                            </div>
+                            <% } %>
+                        </div>
+                    <% } %>                
+                <hr />
+                <footer>
+                    <p>&copy; My Instagram Scraping Application</p>
+                </footer>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

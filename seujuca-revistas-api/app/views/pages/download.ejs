@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+    <header>
+        <% include ../partials/nav_menus %>
+    </header>
+    <main>
+        <div class="page-header">
+            <h1>Download</h1>
+        </div>
+        <!-- Buscar -->
+        <div class="row">
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadRevistas">Baixar Revistas</button>                
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadFamosas">Baixar Famosas</button>                
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadGostosas">Baixar Hots</button>                
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadOtarias">Baixar Otárias</button>                
+            </div>
+
+            <div class="col-md-2">
+                <button class="btn btn-success" id="btnDownload">Baixar</button>                
+            </div>
+
+            <img alt="loading" class="loading_ico" src="images/loading/loading3.gif" style="display: none" />
+        </div>
+        <div class="row" id="divResults">
+        </div>
+    </main>
+
+    <!-- Modal de carregamento -->
+    <div class="modal-blockUI" id="message">
+        <h3 id="mensagemModal"></h3>
+        <p>
+            <img src="images/loading/loading1.gif" style="width: 80px; height: 80px">
+        </p>
+    </div>
+
+    <hr />
+    <footer>
+        <% include ../partials/footer %>
+    </footer>
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            $('#btnDownloadRevistas').click(function(e) {
+                e.preventDefault();
+                $('.loading_ico').prop('display', 'block')
+                
+                // obter as categorias (marcas)
+                var categorias = getCategorias();
+
+                //#region Obter as revistas por marca
+                var revistas = [];
+                for(var i = 0; i < categorias.data.categorias.length; i++) {
+                    var categoria = categorias.data.categorias[i];
+                    var marca = categoria.id
+                    var has_next_page = true;
+                    var page = 1;
+
+                    var result = getRevistas(marca, null);
+                    var dataInit = result.data;
+
+                    dataInit.revistas.forEach(revista => {
+                        revistas.push(revista)
+                    });
+
+                    // var html = createHtmlContent(models);
+                    // $(html).appendTo('#divResults')
+
+                    if(dataInit.page_info.has_next_page) {
+                        do {
+                            page++;
+                            var resultOthers = getRevistas(marca, page);
+                            var dataOthers = resultOthers.data;
+
+                            if(!dataOthers.page_info.has_next_page) {
+                                has_next_page = false;
+                            }
+
+                            dataOthers.revistas.forEach(revista => {
+                                revistas.push(revista)
+                            });
+
+                            // var htmlOthers = createHtmlContent(dataOthers.models);
+                            // $(htmlOthers).appendTo('#divResults')
+
+                        } while(has_next_page)
+                    }
+                    $('.loading_ico').prop('display', 'none')
+                }
+                //#endregion                                                
+                
+                console.log('Total de ' + revistas.length + ' revistas');
+                //#region Salva as Revistas na base MongoDb
+                var json = salvarRevistas(revistas)
+                console.log(json)
+                //#endregion
+            })
+            
+            $('#btnDownloadFamosas').click(function(e) {
+                e.preventDefault();
+                $('.loading_ico').prop('display', 'block')
+
+                //#region Famosas
+                var revistas = [];
+                var url = '/api/v1/seujeca/mulheres/famosas'
+                var result = getMulheres(url, null);
+                var dataInit = result.data;
+                var has_next_page = true;
+                var page = 1;
+
+                dataInit.famosas.forEach(revista => {
+                    revistas.push(revista)
+                });
+
+                if(dataInit.page_info.has_next_page) {
+                    do {
+                        page++;
+                        var resultOthers = getMulheres(url, page);
+                        var dataOthers = resultOthers.data;
+
+                        if(!dataOthers.page_info.has_next_page) {
+                            has_next_page = false;
+                        }
+
+                        dataOthers.famosas.forEach(revista => {
+                            revistas.push(revista)
+                        });
+
+                    } while(has_next_page)
+                }
+                //#endregion
+
+                console.log('Total de ' + revistas.length + ' revistas');
+                //#region Salva as Revistas na base MongoDb
+                for(var i = 0; i < revistas.length; i++) {
+                    var id = revistas[i].famosa_id
+                    var url = '/api/v1/seujeca/save/famosas/' + id
+                    var json = salvarOutras(url)
+                    console.log(json)
+                }
+                //#endregion
+            });
+        
+            $('#btnDownloadGostosas').click(function(e) {
+                e.preventDefault();
+                $('.loading_ico').prop('display', 'block')
+
+                //#region Gostosas
+                var revistas = [];
+                var url = '/api/v1/seujeca/mulheres/gostosas'
+                var result = getMulheres(url, null);
+                var dataInit = result.data;
+                var has_next_page = true;
+                var page = 1;
+
+                dataInit.famosas.forEach(revista => {
+                    revistas.push(revista)
+                });
+
+                if(dataInit.page_info.has_next_page) {
+                    do {
+                        page++;
+                        var resultOthers = getMulheres(url, page);
+                        var dataOthers = resultOthers.data;
+
+                        if(!dataOthers.page_info.has_next_page) {
+                            has_next_page = false;
+                        }
+
+                        dataOthers.famosas.forEach(revista => {
+                            revistas.push(revista)
+                        });
+
+                    } while(has_next_page)
+                }
+                //#endregion
+
+                console.log('Total de ' + revistas.length + ' revistas');
+                //#region Salva as Revistas na base MongoDb
+                for(var i = 0; i < revistas.length; i++) {
+                    var id = revistas[i].famosa_id
+                    var url = '/api/v1/seujeca/save/gostosas/' + id
+                    var json = salvarOutras(url)
+                    console.log(json)
+                }
+                //#endregion
+            });
+
+            $('#btnDownloadOtarias').click(function(e) {
+                e.preventDefault();
+                $('.loading_ico').prop('display', 'block')
+
+                //#region Otarias
+                var revistas = [];
+                var url = '/api/v1/seujeca/mulheres/caiu-na-net'
+                var result = getMulheres(url, null);
+                var dataInit = result.data;
+                var has_next_page = true;
+                var page = 1;
+
+                dataInit.vacilonas.forEach(revista => {
+                    revistas.push(revista)
+                });
+
+                if(dataInit.page_info.has_next_page) {
+                    do {
+                        page++;
+                        var resultOthers = getMulheres(url, page);
+                        var dataOthers = resultOthers.data;
+
+                        if(!dataOthers.page_info.has_next_page) {
+                            has_next_page = false;
+                        }
+
+                        dataOthers.vacilonas.forEach(revista => {
+                            revistas.push(revista)
+                        });
+
+                    } while(has_next_page)
+                }
+                //#endregion
+
+                console.log('Total de ' + revistas.length + ' revistas');
+                //#region Salva as Revistas na base MongoDb
+                for(var i = 0; i < revistas.length; i++) {
+                    var id = revistas[i].famosa_id
+                    var url = '/api/v1/seujeca/save/caiu-na-net/' + id
+                    var json = salvarOutras(url)
+                    console.log(json)
+                }
+                //#endregion
+            });
+
+            $('#btnDownload').click(function() {
+
+                $('#mensagemModal').text("Baixando, aguarde um momento...");
+                $.blockUI({
+                    message: $('#message'),
+                    css: { width: '275px' }
+                });
+                
+                var revistas = getAllRevistas();
+                
+                for(var i = 0; i < revistas.data.length; i++) {
+                    var revista = revistas.data[i];
+                    var json = downloadRevistas(revista.revista_id, revista.photos);
+                }
+
+            })
+        }); // fim do load da pagina        
+    </script>
+
+</body>
+</html>

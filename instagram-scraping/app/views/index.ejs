@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/styles.css">
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/app-scripts.js"></script>
+
+    <script type="text/javascript">
+        var medias = [];
+
+            
+
+        $(document).ready(function () {
+
+            $('#divInfo, #divLoadMore, #divDownload').hide();
+
+            /* limpando o campo */
+            $('#txtSearch').keyup(function() {
+                if ($('#txtSearch').val().length == 0) {
+                    $('#divResult').html("");
+                    $('#divInfo, #divLoadMore, #divDownload').hide();
+                }
+            });
+            //------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+            /* pesquisar */
+            $('#btnSearch').click(function () {
+                medias = [];
+                $('#divResult').html("");
+                $('#divInfo').hide();
+
+                if ($('#txtSearch').val().length == 0) {
+                    alert('Favor informar o nome de usuário ou o link do perfil do Instagram!')
+                    return;
+                }
+
+                var q = $('#txtSearch').val();
+                var criteria = $('#txtSearch').val();
+                var has_url = criteria.toLowerCase().match('https://www.instagram.com/');
+                if (has_url != null) {
+                    q = criteria.toLowerCase().split('https://www.instagram.com/')[1];
+                    q = q.replace('/', '');
+                }
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/getInstagramInit/' + q,
+                    success: function (data) {
+
+                        if(data.user.is_private == true) {
+                            alert('Usuário com a conta privada')
+                            return;
+                        }
+
+                        $('#divInfo').show();
+                        $('#lblUsername').text(data.user.username);
+                        $('#lblTotalMedias').text(data.all_medias);
+                        
+                        var all_medias = data.all_medias;
+                        var medias_count = data.edges.length;
+
+                        if (all_medias > 12) {
+                            $('#divLoadMore').show();
+                        }
+
+                        if (all_medias > 0) {
+                            $('#divDownload').show();
+                        }
+
+                        if (data.page_info.has_next_page == false) {
+                            $('#divLoadMore').hide();
+                        }
+
+                        $('#hdn_end_cursor').val(data.page_info.end_cursor);
+                        $('#hdn_id').val(data.user.id);
+                        $('#hdn_hrx_gis').val(data.rhx_gis);
+                        $('#hdn_csrf_token').val(data.csrf_token);
+                        $('#hdn_has_next_page').val(data.page_info.has_next_page);
+
+                        var strHtml = "";
+
+                        for (var i = 0; i < medias_count; i++) {
+                            var media = data.edges[i].node;
+
+                            if(media.__typename == "GraphVideo" && media.is_video == true) {
+                                var video_url = getVideoUrl(media.shortcode);
+                                strHtml += '<div class="cell">';
+                                strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                
+                                strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
+                                strHtml += '    </div>';
+                                strHtml += '</div>';
+                                medias.push(video_url);
+                            } else if(media.__typename == "GraphSidecar") {
+                                var sidecarImages = getSidecarImages(media.shortcode);
+
+                                sidecarImages.edges.forEach(item => {
+                                    var sidecar = item.node;
+                                    if(sidecar.__typename == "GraphVideo" && sidecar.is_video == true) {
+                                        var video_url = sidecar.video_url;
+                                        strHtml += '<div class="cell">';
+                                        strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                        
+                                        strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
+                                        strHtml += '    </div>';
+                                        strHtml += '</div>';
+                                        medias.push(video_url);
+                                    } else {
+                                        strHtml += '<div class="cell">';
+                                        strHtml += '    <img src="' + sidecar.display_url +'" class="responsive-image" style="width:393px; height:393px">';
+                                        strHtml += '</div>';
+                                        medias.push(sidecar.display_url);
+                                    }
+                                });
+                            } else {
+                                strHtml += '<div class="cell">';
+                                strHtml += '    <img src="' + media.display_url +'" class="responsive-image" style="width:393px; height:393px">';
+                                strHtml += '</div>';
+                                medias.push(media.display_url);
+                            }
+                        }
+
+                        $(strHtml).appendTo('#divResult');
+                    },
+                    error: function (err) {
+                        alert(err.statusText);
+                    }
+                });
+
+            });
+            //------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+            /* carregar mais */
+            $('#btnLoadMore').click(function () {
+
+                var end_cursor = $('#hdn_end_cursor').val();
+                var rhx_gis = $('#hdn_hrx_gis').val();
+                var csrf_token = $('#hdn_csrf_token').val();
+                var userId = $('#hdn_id').val();
+                var params = end_cursor + '/' + rhx_gis + '/' + csrf_token + '/' + userId;
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/getInstagramMore/' + params,
+                    success: function (data) {
+
+                        if (data.page_info.has_next_page == false) {
+                            $('#divLoadMore').hide();
+                            $('#divDownload').show();
+                        }
+
+                        $('#hdn_end_cursor').val(data.page_info.end_cursor);
+                        $('#hdn_has_next_page').val(data.page_info.has_next_page);
+                        
+                        var medias_count = data.edges.length;
+
+                        var strHtml = "";
+
+                        for (var i = 0; i < medias_count; i++) {
+                            var media = data.edges[i].node;
+
+                            if(media.__typename == "GraphVideo" && media.is_video == true) {
+                                var video_url = getVideoUrl(media.shortcode);
+                                strHtml += '<div class="cell">';
+                                strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                
+                                strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
+                                strHtml += '    </div>';
+                                strHtml += '</div>';
+                                medias.push(video_url);
+                            } else if(media.__typename == "GraphSidecar") {
+                                var sidecarImages = getSidecarImages(media.shortcode);
+
+                                sidecarImages.edges.forEach(item => {
+                                    var sidecar = item.node;
+                                    if(sidecar.__typename == "GraphVideo" && sidecar.is_video == true) {
+                                        var video_url = sidecar.video_url;
+                                        strHtml += '<div class="cell">';
+                                        strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                        
+                                        strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
+                                        strHtml += '    </div>';
+                                        strHtml += '</div>';
+                                        medias.push(video_url);
+                                    } else {
+                                        strHtml += '<div class="cell">';
+                                        strHtml += '    <img src="' + sidecar.display_url +'" class="responsive-image" style="width:393px; height:393px">';
+                                        strHtml += '</div>';
+                                        medias.push(sidecar.display_url);
+                                    }
+                                });
+                            } else {
+                                strHtml += '<div class="cell">';
+                                strHtml += '    <img src="' + media.display_url +'" class="responsive-image" style="width:393px; height:393px">';
+                                strHtml += '</div>';
+                                medias.push(media.display_url);
+                            }
+                        }
+
+                        $(strHtml).appendTo('#divResult');
+                    },
+                    error: function (err) {
+                        alert(err.statusText);
+                    }
+                });
+            });
+            //------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+            /* baixar fotos */
+            $('#btnDownload').click(function () {
+                $.ajax({
+                    type: 'GET',
+                    url: '/downloadFotos',
+                    data: {
+                        'medias': JSON.stringify(medias),
+                        'username': $('#txtSearch').val()
+                    },
+                    success: function (data) {
+                        if ($('#hdn_has_next_page').val() == false) {
+                            medias = [];
+                        }
+                        alert('Fotos salvas com sucesso');
+                    },
+                    error: function (err) {
+                        medias = [];
+                        alert('Erro ao salvar as fotos');
+                    }
+                })
+            })
+            //------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        }); // load da pagina
+
+        function getVideoUrl(shortcode) {
+            var video_url = '';
+            
+            var url = 'https://www.instagram.com/p/' + shortcode + '/?__a=1';
+
+            var jqXHR = $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: 'json',
+                async: false,
+                success: function(resp) {
+                },
+                error: function(err) {
+                }
+            });
+            var json = JSON.parse(jqXHR.responseText);
+            video_url = json.graphql.shortcode_media.video_url;
+            return video_url;
+        }
+
+        function getSidecarImages(shortcode) {
+            var shortcode_media = {};
+            var url = 'https://www.instagram.com/p/' + shortcode + '/?__a=1';
+            var jqXHR = $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: 'json',
+                async: false,
+                success: function(resp) {
+                    video_url = resp.graphql.shortcode_media;                    
+                },
+                error: function(err) {
+                }
+            });
+            var json = JSON.parse(jqXHR.responseText);
+            shortcode_media = json.graphql.shortcode_media.edge_sidecar_to_children;
+            return shortcode_media;
+        }
+    </script>
+
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false"
+                    aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">Instagram Scraping</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active">
+                        <a href="/">Home</a>
+                    </li>
+                    <li>
+                        <a href="/search-from-instagram">Pesquisar no Instagram</a>
+                    </li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </nav>
+    <div class="container" style="padding-top: 40px">
+        <div class="page-header">
+            <h1>Pagina inicial</h1>
+        </div>
+        <!-- Buscar -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group addon">
+                            <input type="search" class="form-control" name="search" id="txtSearch" placeholder="Digite o nome de usuário do Instagram" />
+                            <span class="input-group-addon btn btn-default btn-lg" id="btnSearch" style="margin-left: -1px;">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="hdn_end_cursor" id="hdn_end_cursor" />
+        <input type="hidden" name="hdn_id" id="hdn_id" />
+        <input type="hidden" name="hdn_hrx_gis" id="hdn_hrx_gis" />
+        <input type="hidden" name="hdn_csrf_token" id="hdn_csrf_token" />
+        <input type="hidden" name="hdn_has_next_page" id="hdn_has_next_page" />
+
+        <!-- Div dos resultados -->
+        <div id="divInfo">
+            <h3>Total de Fotos de
+                <span id="lblUsername"></span>:
+                <span id="lblTotalMedias"></span>
+            </h3>
+        </div>
+        <div class="grid" id="divResult" style="padding-top: 40px">
+        </div>
+
+        <!-- Botão carregar mais -->
+        <div class="row" style="padding-top: 40px">
+            <div id="divLoadMore" class="text-center col-md-12">
+                <button class="btn btn-danger btn-sm" id="btnLoadMore" style="width: 100px">
+                    Mais
+                </button>
+            </div>
+        </div>
+
+        <!-- Botão baixar todas as fotos -->
+        <div class="row" style="padding-top: 40px">
+            <div id="divDownload" class="text-center col-md-12">
+                <button class="btn btn-success btn-sm" id="btnDownload" style="width: 100px">
+                    Baixar fotos
+                </button>
+            </div>
+        </div>
+
+        <hr />
+        <footer>
+            <p>&copy; My Instagram Scraping Application</p>
+        </footer>
+    </div>
+</body>
+
+</html>

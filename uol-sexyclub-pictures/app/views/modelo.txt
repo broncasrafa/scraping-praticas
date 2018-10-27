@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+    <header>
+        <% include ../partials/nav_menus %>
+    </header>
+    <main>
+        <div class="page-header">
+            <h1>Download</h1>
+        </div>
+        <!-- Buscar -->
+        <div class="row">
+            <div class="col-md-12">
+                
+            </div>
+        </div>
+    </main>
+
+    <hr />
+    <footer>
+        <% include ../partials/footer %>
+    </footer>
+</body>
+</html>
