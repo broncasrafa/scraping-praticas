@@ -12,6 +12,9 @@ var app = express();
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
+process.on('warning', e => console.warn(e.stack));
+process.setMaxListeners(0);
+
 /* setar as variáveis 'view engine' e 'views' do express */
 app.set('view engine', 'ejs');
 app.set('views', './app/views');
@@ -53,6 +56,7 @@ if (!isProduction) {
 
 /// catch 404 and forward to error handler
 app.use(function (req, res, next) {
+    
     var err = new Error('Not Found');
     err.status = 404;
     next(err);
@@ -65,8 +69,7 @@ app.use(function (req, res, next) {
 // will print stacktrace
 if (!isProduction) {
     app.use(function (err, req, res, next) {
-        console.log(err.stack);
-
+        //console.log(err.stack);
         res.status(err.status || 500).json({
             'errors': {
                 message: err.message,

@@ -7,10 +7,11 @@ var request = require('request'),
     locURL  = 'https://www.instagram.com/explore/locations/',
     dataExp = /window\._sharedData\s?=\s?({.+);<\/script>/;
 
-// var Cookie = require('request-cookies').Cookie;
 var settings = require('../../config/appConfig');
 var fs = require('fs');
+var rp = require('request-promise');
 
+//#region User Data Init, Others
 exports.scrapeUserPageInit = function(username) {
     return new Promise(function(resolve, reject) {
         if(!username) {
@@ -76,12 +77,14 @@ exports.scrapeUserPageOther = function(url, signature) {
             method: 'GET',
             headers: {
                 'X-Instagram-GIS': signature,
-                'Cookie': settings.cookie
+                'Cookie': settings.cookie,
+                'User-Agent': settings.user_agent
             }
         };
+        console.log('[OTHERS]: ', url);
         
         request(options, function(err, response, body) { 
-
+            // console.log('[error]: => ' + err)
             if(err) {
                 reject(new Error('Error while retrieve data user page'));
             }
@@ -89,8 +92,10 @@ exports.scrapeUserPageOther = function(url, signature) {
             if(body == null) {
                 return reject(new Error('Body is empty'));
             }
-
+            
             var jsonData = scrapeOthers(body);
+
+            // console.log('[body]: => ' + jsonData)
 
             if(jsonData.data && jsonData.data.user) {
                 var data = jsonData.data;
@@ -200,7 +205,9 @@ exports.scrapeUserPage = function(username) {
         });
     });
 };
+//#endregion
 
+//#region Stories
 exports.scrapeLastUserStories = function(pk) {
     return new Promise(function(resolve, reject) {
         if(!pk) {
@@ -215,6 +222,7 @@ exports.scrapeLastUserStories = function(pk) {
                 'Cookie': settings.cookie
             }
         }
+        console.log('[RECENTS STORIES]: ', url);
 
         request(options, function(err, response, body) {
             if(err) {
@@ -237,6 +245,166 @@ exports.scrapeLastUserStories = function(pk) {
     });
 };
 
+exports.scrapeUserHighlightStoriesIds = function (userId) {
+    return new Promise((resolve, reject) => {
+        if (!userId) {
+            return reject(new Error('Argument "userId" must be specified'));
+        }
+        var url = 'https://www.instagram.com/graphql/query/?query_hash=7c16654f22c819fb63d1183034a5162f&variables=%7B%22user_id%22%3A%22' + userId + '%22%2C%22include_chaining%22%3Atrue%2C%22include_reel%22%3Atrue%2C%22include_suggested_users%22%3Afalse%2C%22include_logged_out_extras%22%3Afalse%2C%22include_highlight_reels%22%3Atrue%7D';
+
+        var options = {
+            url: url,
+            method: 'GET',
+            headers: {
+                'Cookie': settings.cookie
+            }
+        };
+
+        request.get(options, (err, response, body) => {
+            if (err) {
+                reject(new Error('Error while retrieve data user highlight stories'));
+            }
+
+            if (body == null) {
+                return reject(new Error('Body is empty'));
+            }
+
+            try {
+                var json = JSON.parse(body);
+                
+                if (json.data) {
+                    var highlight_reels = json.data.user.edge_highlight_reels.edges;
+                    var ids = [];
+                    highlight_reels.forEach(item => {
+                        ids.push(item.node.id);
+                    });
+                    console.log(ids)
+                    return resolve(ids);
+                } else {
+                    return reject(new Error('Error scraping user page'));
+                }
+            } catch (e) {
+                return reject(new Error(e));
+            }
+        });
+    });
+}
+
+exports.scrapeUserHighlightStories = function (reel_ids) {
+    return new Promise((resolve, reject) => {
+        if (!reel_ids) {
+            return reject(new Error('Argument "reel_ids" must be specified'));
+        }
+        //var reel_ids = ids.join('%22%2C%22');
+        var url = 'https://www.instagram.com/graphql/query/?query_hash=45246d3fe16ccc6577e0bd297a5db1ab&variables=%7B%22reel_ids%22%3A%5B%5D%2C%22tag_names%22%3A%5B%5D%2C%22location_ids%22%3A%5B%5D%2C%22highlight_reel_ids%22%3A%5B%22' + reel_ids + '%22%5D%2C%22precomposed_overlay%22%3Afalse%7D';
+
+        var options = {
+            url: url,
+            method: 'GET',
+            headers: {
+                'Cookie': settings.cookie
+            }
+        };
+
+        console.log('[DESTAQUES STORIES]: ', url);
+        
+        request.get(options, (err, response, body) => {
+            if (err) {
+                reject(new Error('Error while retrieve data user highlight stories'));
+            }
+
+            if (body == null) {
+                return reject(new Error('Body is empty'));
+            }
+
+            try {
+                var jsonHr = JSON.parse(body);
+                if (jsonHr.data) {
+                    return resolve(jsonHr.data);
+                } else {
+                    return reject(new Error('Error scraping user page'));
+                }
+            } catch (e) {
+                return reject(new Error(e));
+            }
+        });
+    });
+}
+//#endregion
+
+//#region Following
+exports.scrapeUserFollowingInit = function(pk) {
+    return new Promise(function(resolve, reject) {
+        if(!pk) {
+            return reject(new Error('Argument "pk" must be specified'));
+        }
+
+        var count = 50;
+        var url = 'https://www.instagram.com/graphql/query/?query_hash=9335e35a1b280f082a47b98c5aa10fa4&variables=%7B%22id%22%3A%22'+pk+'%22%2C%22first%22%3A'+count+'%7D';
+        var options = {
+            url: url,
+            method: 'GET',
+            headers: {
+                'Cookie': settings.cookie
+            }
+        }
+
+        request(options, function(err, response, body) {
+            if(err) {
+                reject(new Error('Error while retrieve data user following init'));
+            }
+
+            if(body == null) {
+                return reject(new Error('Body is empty'));
+            }
+
+            var json = JSON.parse(body);
+            
+            if(json.data && json.data.user.edge_follow) {
+                var user_edge_follow = json.data.user.edge_follow;
+                return resolve(user_edge_follow);
+            } else {
+                reject(new Error('Error scraping user following init'));
+            }
+        });
+    });
+}
+exports.scrapeUserFollowingOthers = function(url) {
+    return new Promise(function(resolve, reject) {
+        if(!url) {
+            return reject(new Error('Argument "url" must be specified'));
+        }
+
+        var options = {        
+            url: url,
+            method: 'GET',
+            headers: {
+                'Cookie': settings.cookie
+            }
+        };
+
+        request(options, function(err, response, body) {
+            if(err) {
+                reject(new Error('Error while retrieve data user following'));
+            }
+
+            if(body == null) {
+                return reject(new Error('Body is empty'));
+            }
+
+            var jsonData = scrapeOthers(body);
+
+            if(jsonData.data && jsonData.data.user && jsonData.data.user.edge_follow) {
+                return resolve(jsonData);
+            } else {
+                reject(new Error('Error scraping user following'));
+            }
+        })
+    });
+}
+//#endregion
+
+//#region Followers
 exports.scrapeUserFollowersInit = function(pk) {
     return new Promise(function(resolve, reject) {
         if(!pk) {
@@ -273,44 +441,6 @@ exports.scrapeUserFollowersInit = function(pk) {
         });
     });
 };
-
-exports.scrapeUserFollowingInit = function(pk) {
-    return new Promise(function(resolve, reject) {
-            if(!pk) {
-                return reject(new Error('Argument "pk" must be specified'));
-            }
-
-            var count = 50;
-            var url = 'https://www.instagram.com/graphql/query/?query_hash=9335e35a1b280f082a47b98c5aa10fa4&variables=%7B%22id%22%3A%22'+pk+'%22%2C%22first%22%3A'+count+'%7D';
-            var options = {
-                url: url,
-                method: 'GET',
-                headers: {
-                    'Cookie': settings.cookie
-                }
-            }
-
-            request(options, function(err, response, body) {
-                if(err) {
-                    reject(new Error('Error while retrieve data user following init'));
-                }
-
-                if(body == null) {
-                    return reject(new Error('Body is empty'));
-                }
-
-                var json = JSON.parse(body);
-                
-                if(json.data && json.data.user.edge_follow) {
-                    var user_edge_follow = json.data.user.edge_follow;
-                    return resolve(user_edge_follow);
-                } else {
-                    reject(new Error('Error scraping user following init'));
-                }
-            });
-        });
-}
-
 exports.scrapeUserFollowersOthers = function(url) {
     return new Promise(function(resolve, reject) {
         if(!url) {
@@ -343,42 +473,132 @@ exports.scrapeUserFollowersOthers = function(url) {
             }
         })
     });
-}
+};
+//#endregion
 
-exports.scrapeUserFollowingOthers = function(url) {
+//#region Downloads
+exports.saveMedias = function(mediaUrl, saveTo, filename) {
     return new Promise(function(resolve, reject) {
-        if(!url) {
-            return reject(new Error('Argument "url" must be specified'));
+        if (!mediaUrl) {
+            return reject(new Error('Argument "mediaUrl" must be specified'));
         }
 
-        var options = {        
-            url: url,
+        var options = {
+            url: mediaUrl,
             method: 'GET',
-            headers: {
-                'Cookie': settings.cookie
-            }
-        };
+            encoding: 'binary',
+            rejectUnauthorized: false
+        }
 
-        request(options, function(err, response, body) {
-            if(err) {
-                reject(new Error('Error while retrieve data user following'));
+        request(options, function(error, response, body) {                        
+            
+            var path = `${saveTo}/${filename}`;
+            fs.writeFile(path, body, 'binary', (err) => {
+                if(err) {
+                    console.log('Erro ao tentar salvar a media: ', err);
+                    reject(new Error('Erro ao tentar salvar a media'));
+                }
+                resolve({ status:'OK', data: { message: 'Media salva com sucesso'} });
+            });
+        })
+
+    });
+};
+
+exports.checkDirectorySync = function(directory) {
+    try {
+        fs.statSync(directory);
+    } catch(e) {
+        fs.mkdirSync(directory);
+    }
+};
+
+exports.checkDirectory = function(directory, callback) {  
+    fs.stat(directory, function(err, stats) {
+      //Check if error defined and the error code is "not exists"
+      if (err && err.errno === 34) {
+        //Create the directory, call the callback.
+        fs.mkdir(directory, callback);
+      } else {
+        //just in case there was a different error:
+        callback(err)
+      }
+    });
+}
+//#endregion
+
+//#region Search
+exports.searchFromInstagram = function(query) {
+    return new Promise(function(resolve, reject) {
+        if (!query) {
+            return reject(new Error('Argument "query" must be specified'));
+        }
+        var q = query.replace(' ', '+');
+        var url = `https://www.instagram.com/web/search/topsearch/?context=blended&query=${q}&rank_token=0.7859078765611462`; //0.31090695971357807`;
+        request(url, function(error, response, body) {
+            if(error) {
+                return reject(new Error('Error while retrieve data'));
             }
 
             if(body == null) {
                 return reject(new Error('Body is empty'));
-            }
-
-            var jsonData = scrapeOthers(body);
-
-            if(jsonData.data && jsonData.data.user && jsonData.data.user.edge_follow) {
-                return resolve(jsonData);
-            } else {
-                reject(new Error('Error scraping user following'));
-            }
+            }            
+            var json = JSON.parse(body);
+            return resolve(json);
         })
     });
 }
+//#endregion
 
+//#region Others Functions
+exports.scrapePostData = function(post) {
+    return {
+        media_id : post.node.id,
+        shortcode : post.node.shortcode,
+        text : post.node.edge_media_to_caption.edges[0] && post.node.edge_media_to_caption.edges[0].node.text,
+        comment_count : post.node.edge_media_to_comment.count,
+        like_count : post.node.edge_liked_by.count,
+        display_url : post.node.display_url,
+        owner_id : post.node.owner.id,
+        date : post.node.taken_at_timestamp,
+        thumbnail : post.node.thumbnail_src,
+        thumbnail_resource : post.node.thumbnail_resources
+    }
+}
+
+exports.scrapePostDataOthers = function(post) {
+    return {
+        media_id : post.node.id,
+        shortcode : post.node.shortcode,
+        text : post.node.edge_media_to_caption.edges[0] && post.node.edge_media_to_caption.edges[0].node.text,
+        comment_count : post.node.edge_media_to_comment.count,
+        like_count : post.node.edge_media_preview_like.count,
+        display_url : post.node.display_url,
+        owner_id : post.node.owner.id,
+        date : post.node.taken_at_timestamp,
+        thumbnail : post.node.thumbnail_src,
+        thumbnail_resource : post.node.thumbnail_resources
+    }
+}
+
+exports.scrapePostCode = function(code) {
+    return new Promise(function(resolve, reject){
+        if (!code) return reject(new Error('Argument "code" must be specified'));
+
+        request(postURL + code, function(err, response, body){
+            var data = scrape(body);
+            if (data && data.entry_data && 
+                data.entry_data.PostPage[0] && 
+                data.entry_data.PostPage[0].graphql && 
+                data.entry_data.PostPage[0].graphql.shortcode_media) {
+                resolve(data.entry_data.PostPage[0].graphql.shortcode_media); 
+            }
+            else {
+                reject(new Error('Error scraping post page "' + code + '"'));
+            }
+        });
+    });
+}
 
 exports.deepScrapeTagPage = function(tag) {
     return new Promise(function(resolve, reject){
@@ -450,56 +670,9 @@ exports.scrapeTag = function(tag) {
         })
     });
 };
+//#endregion
 
-exports.scrapePostData = function(post) {
-    return {
-        media_id : post.node.id,
-        shortcode : post.node.shortcode,
-        text : post.node.edge_media_to_caption.edges[0] && post.node.edge_media_to_caption.edges[0].node.text,
-        comment_count : post.node.edge_media_to_comment.count,
-        like_count : post.node.edge_liked_by.count,
-        display_url : post.node.display_url,
-        owner_id : post.node.owner.id,
-        date : post.node.taken_at_timestamp,
-        thumbnail : post.node.thumbnail_src,
-        thumbnail_resource : post.node.thumbnail_resources
-    }
-}
-
-exports.scrapePostDataOthers = function(post) {
-    return {
-        media_id : post.node.id,
-        shortcode : post.node.shortcode,
-        text : post.node.edge_media_to_caption.edges[0] && post.node.edge_media_to_caption.edges[0].node.text,
-        comment_count : post.node.edge_media_to_comment.count,
-        like_count : post.node.edge_media_preview_like.count,
-        display_url : post.node.display_url,
-        owner_id : post.node.owner.id,
-        date : post.node.taken_at_timestamp,
-        thumbnail : post.node.thumbnail_src,
-        thumbnail_resource : post.node.thumbnail_resources
-    }
-}
-
-exports.scrapePostCode = function(code) {
-    return new Promise(function(resolve, reject){
-        if (!code) return reject(new Error('Argument "code" must be specified'));
-
-        request(postURL + code, function(err, response, body){
-            var data = scrape(body);
-            if (data && data.entry_data && 
-                data.entry_data.PostPage[0] && 
-                data.entry_data.PostPage[0].graphql && 
-                data.entry_data.PostPage[0].graphql.shortcode_media) {
-                resolve(data.entry_data.PostPage[0].graphql.shortcode_media); 
-            }
-            else {
-                reject(new Error('Error scraping post page "' + code + '"'));
-            }
-        });
-    });
-}
-
+//#region Location
 exports.scrapeLocation = function(id) {
     return new Promise(function(resolve, reject){
         if (!id) return reject(new Error('Argument "id" must be specified'));
@@ -518,87 +691,12 @@ exports.scrapeLocation = function(id) {
         });
     });
 }
-// womensbest
-// liviaandradereal
-// daherthaisa
-// milculos ***
-// diablitasvip ***
-// hotdiva ***
-// reinasperversas***
-// amazing.chicks *******
-// desireangelz ****
-// daniellachavezofficial
-exports.saveMedias = function(mediaUrl, saveTo, filename) {
-    return new Promise(function(resolve, reject) {
-        if (!mediaUrl) {
-            return reject(new Error('Argument "mediaUrl" must be specified'));
-        }
-
-        var options = {
-            url: mediaUrl,
-            method: 'GET',
-            encoding: 'binary',
-            rejectUnauthorized: false
-        }
-
-        request(options, function(error, response, body) {                        
-            
-            var path = `${saveTo}/${filename}`;
-            fs.writeFile(path, body, 'binary', (err) => {
-                if(err) {
-                    console.log('Erro ao tentar salvar a media: ', err);
-                    reject(new Error('Erro ao tentar salvar a media'));
-                }
-                resolve({ status:'OK', data: { message: 'Media salva com sucesso'} });
-            });
-        })
-
-    });
-};
-
-exports.checkDirectorySync = function(directory) {
-    try {
-        fs.statSync(directory);
-    } catch(e) {
-        fs.mkdirSync(directory);
-    }
-};
-
-exports.checkDirectory = function(directory, callback) {  
-    fs.stat(directory, function(err, stats) {
-      //Check if error defined and the error code is "not exists"
-      if (err && err.errno === 34) {
-        //Create the directory, call the callback.
-        fs.mkdir(directory, callback);
-      } else {
-        //just in case there was a different error:
-        callback(err)
-      }
-    });
-}
-
-exports.searchFromInstagram = function(query) {
-    return new Promise(function(resolve, reject) {
-        if (!query) {
-            return reject(new Error('Argument "query" must be specified'));
-        }
-        var q = query.replace(' ', '+');
-        var url = `https://www.instagram.com/web/search/topsearch/?context=blended&query=${q}&rank_token=0.7859078765611462`; //0.31090695971357807`;
-        request(url, function(error, response, body) {
-            if(error) {
-                return reject(new Error('Error while retrieve data'));
-            }
-
-            if(body == null) {
-                return reject(new Error('Body is empty'));
-            }            
-            var json = JSON.parse(body);
-            return resolve(json);
-        })
-    });
-}
+//#endregion
 
 
+
+
+//#region Functions Auxiliares (Not exported)
 var scrape = function(html) {
     try {
         var dataString = html.match(dataExp)[1];
@@ -614,7 +712,7 @@ var scrape = function(html) {
     return json;
 }
 
-var scrapeOthers = function(html) {        
+var scrapeOthers = function(html) {
     try {
         var json = JSON.parse(html);        
     }
@@ -648,3 +746,12 @@ var parseCookies = function(response, userId) {
     }    
     return textCookie;
 }
+
+var splitArrayInParts = function (myArray, chunk_size) {
+    var results = [];
+    while(myArray.length) {
+        results.push(myArray.splice(0, chunk_size));
+    }
+    return results;
+}
+//#endregion

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title><%= title %></title>
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/toastr.css">
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/app-scripts.js"></script>
+    <script src="js/app-selectedImages.js"></script>
+    <script src="js/jquery.blockUI.js"></script>
+    <script src="js/toastr.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            $('#txtSearch').keyup(function(e) {
+                e.preventDefault();
+                // Number 13 is the "Enter" key on the keyboard
+                if (e.keyCode === 13) {
+                    if ($('#txtSearch').val().length == 0) {
+                        showAlertMessage("Download", "Favor informar o nome de usuário ou o link do perfil do Instagram!", TYPE_MSG_ERROR);
+                        return;
+                    }
+                    loadData();
+                }
+            });
+
+            $('#btnSearch').click(function () { 
+                if ($('#txtSearch').val().length == 0) {
+                    showAlertMessage("Download", "Favor informar o nome de usuário ou o link do perfil do Instagram!", TYPE_MSG_ERROR);
+                    return;
+                }
+                
+                loadData();
+            });
+        });
+
+        function loadData() {
+            var q = $('#txtSearch').val();
+            var criteria = $('#txtSearch').val();
+            var has_url = criteria.toLowerCase().match('https://www.instagram.com/');
+            if (has_url != null) {
+                q = criteria.toLowerCase().split('https://www.instagram.com/')[1];
+                q = q.replace('/', '');
+            }
+
+            $('#mensagemModal').text("Carregando, aguarde um momento...");
+            $.blockUI({
+                message: $('#message'),
+                css: { width: '275px' }
+            });
+
+            //#region Download Medias
+            var dataInit = getDataInit(q);
+            var user = dataInit.user;
+            var username = user.username;
+            var edges_init = dataInit.edges;
+            var has_next_page = true;
+
+            // baixa a inicial
+            if(!edges_init.length > 0) {                
+                return;
+            }
+
+            // 1º Loop
+            var medias = [];
+
+            if(user.profile_pic_url_hd) {
+                medias.push(user.profile_pic_url_hd);
+            } else {
+                medias.push(user.profile_pic_url);
+            }
+            
+            edges_init.forEach(item => {
+                var media = item.node;
+
+                if(media.__typename == "GraphImage") {
+                    medias.push(media.display_url);
+                } else if(media.__typename == "GraphVideo" && media.is_video == true) {
+                    var video_url = getVideoUrl(media.shortcode);
+                    medias.push(video_url);
+                } else if(media.__typename == "GraphSidecar") {
+                    var sidecarImages = getSidecarImages(media.shortcode);
+                    sidecarImages.edges.forEach(item => {
+                        var sidecar = item.node;
+                        if(sidecar.__typename == "GraphVideo" && sidecar.is_video == true) {
+                            var video_url = sidecar.video_url;
+                            medias.push(video_url);
+                        } else {
+                            medias.push(sidecar.display_url);
+                        }
+                    });
+                }
+            });
+            // download as medias iniciais
+            var json = downloadMedias(username, medias);
+
+            if(!dataInit.page_info.has_next_page) {
+                $.unblockUI();
+                return;
+            }
+            
+            var end_cursor = dataInit.page_info.end_cursor;
+            var rhx_gis = dataInit.rhx_gis;
+            var csrf_token = dataInit.csrf_token
+            var userId = dataInit.user.id;
+            var params = end_cursor + '/' + rhx_gis + '/' + csrf_token + '/' + userId;
+
+
+            do {
+                var resultData = getOtherData(params);
+                var otherData = resultData.data
+                var edges = otherData.edges;
+                var page_info = otherData.page_info;
+
+                if(!page_info.has_next_page) {
+                    has_next_page = false;
+                }
+
+                end_cursor = page_info.end_cursor;
+                params = end_cursor + '/' + rhx_gis + '/' + csrf_token + '/' + userId;
+
+                medias = [];
+                edges.forEach(item => {
+                    var media = item.node;
+
+                    if(media.__typename == "GraphImage") {
+                        medias.push(media.display_url);
+                    } else if(media.__typename == "GraphVideo" && media.is_video == true) {
+                        var video_url = getVideoUrl(media.shortcode);
+                        medias.push(video_url);
+                    } else if(media.__typename == "GraphSidecar") {
+                        var sidecarImages = getSidecarImages(media.shortcode);
+                        sidecarImages.edges.forEach(item => {
+                            var sidecar = item.node;
+                            if(sidecar.__typename == "GraphVideo" && sidecar.is_video == true) {
+                                var video_url = sidecar.video_url;
+                                medias.push(video_url);
+                            } else {
+                                medias.push(sidecar.display_url);
+                            }
+                        });
+                    }
+                });
+                // download as demais medias
+                var json = downloadMedias(username, medias);
+
+            } while(has_next_page);
+            //#endregion
+
+
+            //#region Download Recents Stories
+            medias = [];
+            var recentsStories = getRecentsStories(user.id);
+            if(recentsStories.reels_media.length > 0) {
+                recentsStories.reels_media.forEach(item => {
+                    medias = [];
+                    var items = item.items;
+                    items.forEach(it => {
+                        if(it.__typename == "GraphStoryVideo") {
+                            var video_url = it.video_resources[0].src;
+                            medias.push(video_url);
+                        } else {
+                            var display_url = it.display_url;
+                            medias.push(display_url);
+                        }
+                    });
+                    // download as stories recents
+                    var json = downloadMedias(username, medias);
+                });
+            }
+            //#endregion
+
+            //#region Download Destaques Stories
+            var reels_media = [];
+            var idsStories = getIdsStoriesDestaque(user.id);
+            if(idsStories.length > 0) {
+                if(idsStories.length > 10) {
+                    var ids_em_partes = splitArrayInParts(idsStories, 10);
+                    for(var i = 0; i < ids_em_partes.length; i++) {
+                        var medias_download = [];
+                        var medias = getDataStoriesDestaque(ids_em_partes[i]);
+                        medias.forEach(item => {
+                            var items = item.items;
+                            items.forEach(it => {
+                                if(it.__typename == "GraphStoryVideo") {
+                                    var video_url = it.video_resources[0].src;
+                                    medias_download.push(video_url);
+                                } else {
+                                    var display_url = it.display_url;
+                                    medias_download.push(display_url);
+                                }
+                            })
+                        });
+                        // download as stories destaques
+                        var json = downloadMedias(username, medias_download);
+                    }
+                } else {
+                    var medias = getDataStoriesDestaque(idsStories);
+                    var medias_download = [];
+                    medias.forEach(item => {
+                        var items = item.items;
+                        items.forEach(it => {
+                            if(it.__typename == "GraphStoryVideo") {
+                                var video_url = it.video_resources[0].src;
+                                medias_download.push(video_url);
+                            } else {
+                                var display_url = it.display_url;
+                                medias_download.push(display_url);
+                            }
+                        })
+                    });
+                    // download as stories destaques
+                    var json = downloadMedias(username, medias_download);
+                }
+            }
+            //#endregion
+
+            $.unblockUI();
+            //$('#divLoading').hide();            
+        }
+    </script>
+</head>
+<body>
+    <!-- menu -->  
+    <% include partials/_menu.ejs %>
+
+    <div class="container" style="padding-top: 40px">
+        <div class="page-header">
+            <h1>Download Geral</h1>
+        </div>
+        <!-- Buscar -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group addon">
+                            <input type="search" class="form-control" name="search" id="txtSearch" placeholder="Digite o nome de usuário do Instagram" />
+                            <span class="input-group-addon btn btn-default btn-lg" id="btnSearch" style="margin-left: -1px;">
+                                <i class="fa fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="hdn_end_cursor" id="hdn_end_cursor" />
+        <input type="hidden" name="hdn_id" id="hdn_id" />
+        <input type="hidden" name="hdn_hrx_gis" id="hdn_hrx_gis" />
+        <input type="hidden" name="hdn_csrf_token" id="hdn_csrf_token" />
+        <input type="hidden" name="hdn_has_next_page" id="hdn_has_next_page" />
+
+        <div class="row">
+            <div class="text-center" id="divLoading" style="width: 50px; height: 50px; background-color: #dedede; margin-left: 44%; display: none">
+                <p style="background-color: #ffffff">
+                    <img src="img/loading/insta-load_1.gif" style="width: 50px; height: 50px;">
+                </p>
+            </div>
+        </div>
+
+
+
+        <!-- Modal de carregamento -->
+        <div class="modal-blockUI" id="message">
+            <h3 id="mensagemModal"></h3>
+            <p>
+                <img src="img/loading/insta-load_1.gif" style="width: 50px; height: 50px">
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <% include partials/_footer.ejs %>
+    </div>
+</body>
+</html>

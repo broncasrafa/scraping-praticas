@@ -9,9 +9,25 @@
     <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/toastr.css">
         
     <script src="../js/jquery.min.js"></script>
-    <script src="../js/app-scripts.js"></script>
+    <script src="../js/app-scripts.js"></script>    
+    <script src="../js/app-selectedImages.js"></script>
+    <script src="../js/jquery.blockUI.js"></script>
+    <script src="../js/toastr.js"></script>
+
+    <style>
+        .clsDivImg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .clsImg {
+            height: 340.16px;
+            width: 375px;
+        }
+    </style>
+
     <script type="text/javascript">
         $(document).ready(function() {
             
@@ -21,6 +37,11 @@
                 var end_cursor = $('#hdn_end_cursor_followers').val();
                 var has_next_page = $('#hdn_has_next_page_followers').val();
                 
+                $('#mensagemModal').text("Carregando, aguarde um momento...");
+                $.blockUI({
+                    message: $('#message'),
+                    css: { width: '275px' }
+                });
 
                 if(has_next_page == "true") {
                     $('#btnLoadMoreFollowers').text('Carregando...');
@@ -68,11 +89,12 @@
                             });
 
                             $(strHtml).appendTo('#divFollowers');
+                            $.unblockUI();
 
                             $('#btnLoadMoreFollowers').text('Mais');
                         },
                         error: function(error) {
-
+                            showAlertMessage("Download", "Erro ao carregar os dados", TYPE_MSG_ERROR);
                             $('#btnLoadMoreFollowers').text('Mais');
                         }
                     });
@@ -86,6 +108,11 @@
                 var end_cursor = $('#hdn_end_cursor_following').val();
                 var has_next_page = $('#hdn_has_next_page_following').val();
                 
+                $('#mensagemModal').text("Carregando, aguarde um momento...");
+                $.blockUI({
+                    message: $('#message'),
+                    css: { width: '275px' }
+                });
 
                 if(has_next_page == "true") {
                     $('#btnLoadMoreFollowing').text('Carregando...');
@@ -133,11 +160,12 @@
                             });
 
                             $(strHtml).appendTo('#divFollowing');
+                            $.unblockUI();
 
                             $('#btnLoadMoreFollowing').text('Mais');
                         },
                         error: function(error) {
-
+                            showAlertMessage("Download", "Erro ao carregar os dados", TYPE_MSG_ERROR) 
                             $('#btnLoadMoreFollowing').text('Mais');
                         }
                     });
@@ -145,35 +173,256 @@
                     $('#btnLoadMoreFollowing').hide();
                 }
             });
-        });
+        
+            $('#btnDownloadStories').click(function() {
+                var mediasSelecionadasDownload = [];
+                $('.image-checkbox').each(function() {
+                    if($(this).find('input[type="checkbox"]').prop('checked')) {
+                        
+                        if($(this).find('img').attr('src') == null) {
+                            var videoUrl = $(this).find('video').find('source').attr('src');
+                            mediasSelecionadasDownload.push(videoUrl);
+                        } else {
+                            var img = $(this).find('img').attr('src')
+                            mediasSelecionadasDownload.push(img);
+                        }
+                        
+                    }
+                })
+
+                if(mediasSelecionadasDownload.length > 0 && mediasSelecionadasDownload.length <= 50) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '/downloadFotos',
+                        data: {
+                            'medias': JSON.stringify(mediasSelecionadasDownload),
+                            'username': $('#hdn_username').val()
+                        },
+                        success: function (data) {
+                            if ($('#hdn_has_next_page').val() == false) {
+                                medias = [];
+                            }
+                            
+                            showAlertMessage("Download", "Stories salvos com sucesso", TYPE_MSG_SUCCESS)                            
+                        },
+                        error: function (err) {
+                            medias = [];
+                            showAlertMessage("Download", "Erro ao salvar os Stories", TYPE_MSG_ERROR)
+                        }
+                    });
+                }
+                else {
+                    var mediasDownload = [];
+                    $('.image-checkbox').each(function() {
+                        if($(this).find('img').attr('src') == null) {
+                            var videoUrl = $(this).find('video').find('source').attr('src');
+                            mediasDownload.push(videoUrl);
+                        } else {
+                            var img = $(this).find('img').attr('src')
+                            mediasDownload.push(img);
+                        }
+                    })
+                    var json = downloadMedias($('#hdn_username').val(), mediasDownload);
+                }
+
+
+                // else {
+                //     showAlertMessage("Download", "Selecione os Stories para realizar o download", TYPE_MSG_ERROR)
+                // }
+            });
+            
+
+            // Carregar os Stories Recentes
+            var recents_stories = [];
+            $.ajax({
+                url: '/getStoriesRecents',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    'id': $('#hdn_userid').val()
+                },
+                beforeSend: function() {
+                    $('#divLoad_1').show();
+                },
+                success: function(response) {
+                    $('#divLoad_1').hide();
+                    var reels_media = response.reels_media;
+
+                    if(reels_media.length > 0) {
+                        var htmlStr = '';
+                        htmlStr += '<h2>Stories Recentes</h2>';
+                        htmlStr += '<div class="row">';
+                        htmlStr += '    <div class="grid">';
+                        for(var i = 0; i < reels_media.length; i++) {
+                            var items = reels_media[i].items;
+                            items.forEach((item) => {
+                                htmlStr += createHtmlContentStories(item);
+                            });
+                        }
+                        htmlStr += '    </div>';
+                        htmlStr += '</div>';
+                        $(htmlStr).appendTo('#divStoriesRecents');
+                    }
+                },
+                error: function(err) {}
+            });
+
+            // Carregar os Stories Destaques
+            var reels_media = [];
+            $.ajax({
+                url: '/getIdsStoriesDestaques',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    'id': $('#hdn_userid').val()
+                },
+                beforeSend: function() {
+                    $('#divLoad_2').show();
+                },
+                success: function(response) {
+
+                    $('#divLoad_2').hide();
+                    var ids = response;
+                    
+                    if(ids.length > 0) {
+                        if(ids.length > 10) {
+                            var ids_em_partes = splitArrayInParts(ids, 10);
+
+                            for(var i = 0; i < ids_em_partes.length; i++) {
+                                var medias = getDataStoriesDestaque(ids_em_partes[i]);
+                                medias.forEach(item => {
+                                    reels_media.push(item);
+                                });
+                            }
+                        } else {
+                            var medias = getDataStoriesDestaque(ids);
+                            medias.forEach(item => {
+                                reels_media.push(item);
+                            });
+                        }
+
+                        // appendar as medias na tela
+                        if(reels_media.length > 0) {
+                            var htmlStr = '';
+                            htmlStr += '<h2>Stories Destaques</h2>';
+                            htmlStr += '<div class="row">';
+                            htmlStr += '    <div class="grid">';
+                            for(var i = 0; i < reels_media.length; i++) {
+                                var items = reels_media[i].items;
+                                items.forEach((item) => {
+                                    htmlStr += createHtmlContentStories(item);
+                                });
+                            }
+                            htmlStr += '    </div>';
+                            htmlStr += '</div>';
+                            $(htmlStr).appendTo('#divStoriesDestaques');                            
+                        }
+                    }
+                },
+                error: function(err) {
+                }
+            });
+            
+            
+        }); // fim do load da página
+
+
+        function getDataStoriesDestaque(ids) {
+            var reels_media = [];
+            var jqXHR = $.ajax({
+                type: 'GET',
+                url: '/getStoriesDestaques',
+                dataType: 'json',
+                data: {
+                    'ids': ids
+                },
+                async: false,
+                success: function(resp) {
+                },
+                error: function(err) {
+                }
+            });
+            var json = JSON.parse(jqXHR.responseText);
+            reels_media = json.reels_media;
+            return reels_media;
+        }
+        
+        function createHtmlContentStories(item) {
+            var strHtml = "";            
+            if(item.__typename == "GraphStoryVideo") { 
+                var video_url = item.video_resources[0].src;
+                strHtml += '<div class="col-xs-12 col-sm-4 col-md-3 nopad text-center clsDivImg">';
+                strHtml += '    <label class="image-checkbox">';
+                strHtml += '    <div>';                                
+                strHtml += '        <video controls class="clsImg">';
+                strHtml += '            <source src="'+ video_url +'" type="video/mp4"></source>';
+                strHtml += '        </video>';
+                strHtml += '    </div>';
+                strHtml += '    <input type="checkbox" name="image[]" value="" />';
+                strHtml += '    <i class="fa fa-check hidden"></i>';
+                strHtml += '</div>';
+            } else {
+                var display_url = item.display_url;
+                strHtml += '<div class="col-xs-12 col-sm-4 col-md-3 nopad text-center clsDivImg">';
+                strHtml += '    <label class="image-checkbox">';
+                strHtml += '    <img class="img-responsive clsImg" src="' + display_url +'" />';
+                strHtml += '    <input type="checkbox" name="image[]" value="" />';
+                strHtml += '    <i class="fa fa-check hidden"></i>';
+                strHtml += '</div>';
+            }
+            
+            return strHtml;
+        }
+        
+
     </script>
 </head>
 <body>
-    <nav class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false"
-                    aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="/">Project name</a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li>
-                        <a href="/">Home</a>
-                    </li>
-                    <li>
-                        <a href="/search-from-instagram">Pesquisar no Instagram</a>
-                    </li>
-                </ul>
-            </div>
-            <!--/.nav-collapse -->
-        </div>
-    </nav>
+    <!-- menu -->  
+    <% include partials/_menu.ejs %>
+
+
+    <%
+        function formattedNumbers(value) {
+            if (value === null)
+                return null;
+
+            var retorno = "";
+
+            var tamanho = parseInt(value.length);
+            
+            switch (tamanho) {
+                case 1: retorno = value; break;
+                case 2: retorno = value; break;
+                case 3: retorno = value; break;
+                case 4: retorno = String.format("{0}.{1}", value.substring(0, tamanho - 3), value.substring(1, 4)); break;
+                case 5: retorno = String.format("{0}.{1}", value.substring(0, tamanho - 3), value.substring(2, 5)); break;
+                case 6: retorno = String.format("{0}.{1}", value.substring(0, tamanho - 3), value.substring(3, 6)); break;
+                case 7: retorno = String.format("{0}.{1}.{2}", value.substring(0, tamanho - 6), value.substring(1, 4), value.substring(4, 7)); break;
+                case 8: retorno = String.format("{0}.{1}.{2}", value.substring(0, tamanho - 6), value.substring(2, 5), value.substring(5, 8)); break;
+                case 9: retorno = String.format("{0}.{1}.{2}", value.substring(0, tamanho - 6), value.substring(3, 6), value.substring(6, 9)); break;
+                case 10: retorno = String.format("{0}.{1}.{2}.{3}", value.substring(0, tamanho - 9), value.substring(1, 4), value.substring(4, 7), value.substring(7, 10)); break;
+                case 11: retorno = String.format("{0}.{1}.{2}.{3}", value.substring(0, tamanho - 9), value.substring(2, 5), value.substring(5, 8), value.substring(8, 11)); break;
+                case 12: retorno = String.format("{0}.{1}.{2}.{3}", value.substring(0, tamanho - 9), value.substring(3, 6), value.substring(6, 9), value.substring(9, 12)); break;
+                case 13: retorno = String.format("{0}.{1}.{2}.{3}.{4}", value.substring(0, tamanho - 12), value.substring(1, 4), value.substring(4, 7), value.substring(7, 10), value.substring(10, 13)); break;
+                default:
+                    retorno = "Not formatted";
+                    break;
+            }
+
+            return retorno;
+        }
+
+        String.format = function () {
+            var s = arguments[0];
+            for (var i = 0; i < arguments.length - 1; i++) {
+                var reg = new RegExp("\\{" + i + "\\}", "gm");
+                s = s.replace(reg, arguments[i + 1]);
+            }
+            return s;
+        }
+    %>
+
     <div class="jumbotron" style="background-color:#ffffff">
         <div class="container">
             <div class="col-md-3" style="padding-top: 80px;">
@@ -184,9 +433,9 @@
                     <%= data.user.username%>                    
                 </h1>
                 <div style="padding-top: 20px;color: #262626;">
-                    <div class="col-sm-4"><%= data.user.edge_owner_to_timeline_media.count %> publicações</div>
-                    <div class="col-sm-4"><%= data.user.edge_followed_by.count %> seguidores</div>
-                    <div class="col-sm-4">seguindo <%= data.user.edge_follow.count %></div>
+                    <div class="col-sm-4"><%= formattedNumbers(data.user.edge_owner_to_timeline_media.count.toString()) %> publicações</div>
+                    <div class="col-sm-4"><%= formattedNumbers(data.user.edge_followed_by.count.toString()) %> seguidores</div>
+                    <div class="col-sm-4">seguindo <%= formattedNumbers(data.user.edge_follow.count.toString()) %></div>
                 </div>
                 <br />
                 <h4 style="color: #262626;">
@@ -204,60 +453,62 @@
                 </p>
             </div>
             <input type="hidden" id="hdn_userid" value="<%= data.user.id %>">
+            <input type="hidden" id="hdn_username" value="<%= data.user.username %>">
         </div>
     </div>
     <div class="container" style="padding-top: 40px">
         <div class="row" style="margin-top: 40px;">
             <div class="col-md-12">
+
+                <!-- Medias -->                
                 <div class="grid" style="padding-right: 80px;">
                         <% 
                             var medias = data.user.edge_owner_to_timeline_media.edges;
                             
                             for(var i = 0; i < medias.length; i++) {
                                 var media =  medias[i].node;
+                                var likes = formattedNumbers(media.edge_media_preview_like.count.toString());
+                                var comments = formattedNumbers(media.edge_media_to_comment.count.toString());
                         %>
-                        <div class="col-md-3" style="padding-bottom: 20px;">
+                        <div class="col-md-3" style="padding-bottom: 20px; max-width: 100%; max-height: 100%;">
                             <img src="<%= media.display_url %>" class="responsive-image" style="width:243px; height:243px">
                             <div style="background-color: #ffffff; height: 40px">
                                 <div style="padding: 10px 10px 10px 10px; font-size: 11pt;">
-                                    <i class="fa fa-heart" style="color: red;"></i> <span style="padding-left: 6px; padding-right: 10px; color: #000000"><%= media.edge_media_preview_like.count %></span>
-                                    <i class="fa fa-comment-o" style="color: black;"></i><span style="padding-left: 6px; padding-right: 10px; color: #000000"><%= media.edge_media_to_comment.count %></span>
+                                    <i class="fa fa-heart" style="color: red;"></i> <span style="padding-left: 6px; padding-right: 10px; color: #000000"><%= likes %></span>
+                                    <i class="fa fa-comment-o" style="color: black;"></i><span style="padding-left: 6px; padding-right: 10px; color: #000000"><%= comments %></span>
                                 </div>
                             </div>
                         </div>
                         <% } %>
-                    </div>
+                </div>
     
-                    <% 
-                        if(data.stories.reels_media.length > 0) { 
-                            var items = [];
-    
-                            data.stories.reels_media.forEach(function(c) {
-                                c.items.forEach(function(it) {
-                                    items.push(it)
-                                })
-                            })
-                    %>
-                        <h2>Last Stories</h2>
-                        <div class="row">
-                            <div class="grid">
-                                <% for(var i = 0; i < items.length; i++) { %>
-                                    <div class="col-md-3" style="padding-bottom: 20px;">
-                                        <% if(items[i].__typename == "GraphStoryImage") { %>
-                                            <img src="<%= items[i].display_url %>" class="responsive-image" style="width:400px; height:400px">
-                                        <% } else if(items[i].__typename == "GraphStoryVideo") { %>
-                                            <div class="embed-responsive embed-responsive-16by9" style="width:400px; height:400px">
-                                                <video controls>
-                                                    <source type="video/mp4" src="<%= items[i].video_resources[0].src %>"></source>
-                                                </video>
-                                            </div>
-                                        <% } %>
-                                    </div>
-                                <% } %>
-                            </div>
-                        </div>
-                    <% } %>
-    
+
+                <!-- Stories -->
+                <div id="divLoad_1" class="text-center" style="display: none;">
+                    <h3>Carregando, aguarde um momento...</h3>
+                    <p>
+                        <img src="../img/loading/gif-load.gif" style="width: 200px; height: 15px">
+                    </p>
+                </div>
+                <div id="divStoriesRecents"></div>
+
+                <div id="divLoad_2" class="text-center" style="display: none;">
+                    <h3>Carregando, aguarde um momento...</h3>
+                    <p>
+                        <img src="../img/loading/gif-load.gif" style="width: 200px; height: 15px">
+                    </p>
+                </div>
+                <div id="divStoriesDestaques"></div>
+                
+                <div class="text-center">
+                    <p>
+                        <input type="button" id="btnDownloadStories" class="btn btn-success" value="Download Stories" />
+                    </p>
+                </div>
+                <!-- [FIM] Stories -->
+
+
+                <!-- Followers -->
                     <% 
                         if(data.followersInit.edges.length > 0) {                           
                     %>
@@ -303,9 +554,9 @@
                             <% } %>
                         </div>
                     <% } %>
-    
+                <!-- [FIM] Followers -->
                     
-    
+                <!-- Following -->
                     <% 
                         if(data.followingInit.edges.length > 0) {                             
                     %>
@@ -350,11 +601,19 @@
                             </div>
                             <% } %>
                         </div>
-                    <% } %>                
-                <hr />
-                <footer>
-                    <p>&copy; My Instagram Scraping Application</p>
-                </footer>
+                    <% } %> 
+                <!-- [FIM] Following -->
+
+                <!-- Modal de carregamento -->
+                <div class="modal-blockUI" id="message">
+                    <h3 id="mensagemModal"></h3>
+                    <p>
+                        <img src="../img/loading/insta-load_1.gif" style="width: 50px; height: 50px">
+                    </p>
+                </div>
+
+                <!-- Footer -->
+                <% include partials/_footer.ejs %>
             </div>
         </div>
     </div>

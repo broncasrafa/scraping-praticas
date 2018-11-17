@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+        
+        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.2/jquery.fancybox.min.css" media="screen">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.2/jquery.fancybox.min.js"></script>
+
+
+    <style type="text/css">
+        body {
+            background-color: #1d1d1d !important;
+            font-family: "Asap", sans-serif;
+            color: #989898;
+            margin: 10px;
+            font-size: 16px;
+        }
+
+        #demo {
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+
+        .green {
+            background-color: #6fb936;
+        }
+
+        .thumb {
+            margin-bottom: 20px;
+        }
+
+        .page-top {
+            margin-top: 150px;
+        }
+
+
+        img.zoom {
+            width: 350px;
+            /* height: 350px; */
+
+            -webkit-transition: all .3s ease-in-out;
+            -moz-transition: all .3s ease-in-out;
+            -o-transition: all .3s ease-in-out;
+            -ms-transition: all .3s ease-in-out;
+        }
+
+        video.zoom {
+            width: 285px;
+            height: 310px;
+
+            -webkit-transition: all .3s ease-in-out;
+            -moz-transition: all .3s ease-in-out;
+            -o-transition: all .3s ease-in-out;
+            -ms-transition: all .3s ease-in-out;
+        }
+
+
+        .transition {
+            -webkit-transform: scale(1.2);
+            -moz-transform: scale(1.2);
+            -o-transform: scale(1.2);
+            transform: scale(1.2);
+        }
+
+        .modal-header {
+
+            border-bottom: none;
+        }
+
+        .modal-title {
+            color: #000;
+        }
+
+        .modal-footer {
+            display: none;
+        }
+    </style>
+
+
+    <script type="text/javascript">
+        // Este evendo é acionado após o carregamento da página
+
+        $(function () {
+
+            $(".fancybox").fancybox({
+                openEffect: "none",
+                closeEffect: "none"
+            });
+
+            $(".zoom").hover(function () {
+
+                $(this).addClass('transition');
+            }, function () {
+
+                $(this).removeClass('transition');
+            });
+
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container page-top">
+        <div class="row">
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/6ef7ac7b1d280ef4548c8daa0c7744d9.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/6ef7ac7b1d280ef4548c8daa0c7744d9.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/0a874eadfe7338367731d7583ba43047.jpg" class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/0a874eadfe7338367731d7583ba43047.jpg" class="zoom img-fluid"
+                        alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1b2dc224fe32fbe7e284f381e84b7660.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1b2dc224fe32fbe7e284f381e84b7660.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1f4033db4ea5b7be0f38100ff985a7f9.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1f4033db4ea5b7be0f38100ff985a7f9.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9a8bfd59cea835d83d71d2b0651ca34c.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9a8bfd59cea835d83d71d2b0651ca34c.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/465f06df2327c84493798805edca6fee.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/465f06df2327c84493798805edca6fee.jpg?auto=compress&cs=tinysrgb&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/87a9a82ff49f6e933e26bfb3e70b2241.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/87a9a82ff49f6e933e26bfb3e70b2241.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/87e45f8af836bcd3c310d5ea8d50029a.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/87e45f8af836bcd3c310d5ea8d50029a.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9d5844edf832ee96cfb1c279d1f8cf6d.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9d5844edf832ee96cfb1c279d1f8cf6d.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/28f53a12062544120477fd8147cc3b99.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/28f53a12062544120477fd8147cc3b99.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/39e70ee94e0e43bb52601b4dfe4f4587.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/39e70ee94e0e43bb52601b4dfe4f4587.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/51e755bfc1b932e7be2d14595022f360.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/51e755bfc1b932e7be2d14595022f360.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/789e2b5fbb122502b71a5016fde1c978.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/789e2b5fbb122502b71a5016fde1c978.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/857a439608c14bffe0dce8b3e3d36d20.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/857a439608c14bffe0dce8b3e3d36d20.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/4024da3be9439f50e8b5672c0df4c96e.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/4024da3be9439f50e8b5672c0df4c96e.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/6311c209519592018eb769ed4e2973c0.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/6311c209519592018eb769ed4e2973c0.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/129238a991443bf93a603648f6e0e790.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/129238a991443bf93a603648f6e0e790.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/807123c67f313274309e3c0233cfd227.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/807123c67f313274309e3c0233cfd227.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/0a7dbb387a13823cfa5957a9e2d85d96.mp4?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" class="fancybox" rel="ligthbox">
+                    <video controls class="zoom img-fluid">
+                        <source src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/0a7dbb387a13823cfa5957a9e2d85d96.mp4?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" alt="">
+                    </video>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-xs-12 thumb">
+                <a href="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/fa5e42bd2df5dbcfbed896bf08a52eaa.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                    class="fancybox" rel="ligthbox">
+                    <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/fa5e42bd2df5dbcfbed896bf08a52eaa.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+                        class="zoom img-fluid " alt="">
+                </a>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" />
+
+
+    <style type="text/css">
+        .gallery-title {
+            font-size: 36px;
+            color: #42B32F;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 70px;
+        }
+
+        .gallery-title:after {
+            content: "";
+            position: absolute;
+            width: 7.5%;
+            left: 46.5%;
+            height: 45px;
+            border-bottom: 1px solid #5e5e5e;
+        }
+
+        .filter-button {
+            font-size: 18px;
+            border: 1px solid #42B32F;
+            border-radius: 5px;
+            text-align: center;
+            color: #42B32F;
+            margin-bottom: 30px;
+
+        }
+
+        .filter-button:hover {
+            font-size: 18px;
+            border: 1px solid #42B32F;
+            border-radius: 5px;
+            text-align: center;
+            color: #ffffff;
+            background-color: #42B32F;
+
+        }
+
+        .btn-default:active .filter-button:active {
+            background-color: #42B32F;
+            color: white;
+        }
+
+        .port-image {
+            width: 100%;
+        }
+
+        .gallery_product {
+            margin-bottom: 30px;
+        }
+    </style>
+
+
+    <script type="text/javascript">
+        // Este evendo é acionado após o carregamento da página
+
+        $(function () {
+
+
+
+        });
+    </script>
+</head>
+
+<body>
+    <!--
+    <div class="container">
+        <div class="page-header">
+            <h1>Teste</h1>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <ul>
+                    <li><input type="checkbox" id="cb1" />
+                        <label for="cb1"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/0a874eadfe7338367731d7583ba43047.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb2" />
+                        <label for="cb2"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/01f9d726550098b927b694dfee43bbd9.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb3" />
+                        <label for="cb3"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1b2dc224fe32fbe7e284f381e84b7660.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb4" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1f4033db4ea5b7be0f38100ff985a7f9.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb5" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/3aec5aa62db8098f4f657eda476fd6f2.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb6" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/3b46c6e637a781fa36af0339ac2cc3df.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb7" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/6ef7ac7b1d280ef4548c8daa0c7744d9.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb6" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9a8bfd59cea835d83d71d2b0651ca34c.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb7" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9d5844edf832ee96cfb1c279d1f8cf6d.jpg" /></label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+-->
+
+    <div class="container">
+        <div class="row">
+            <div class="gallery col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <h1 class="gallery-title">Gallery</h1>
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter hdpe">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/0a874eadfe7338367731d7583ba43047.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter sprinkle">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/01f9d726550098b927b694dfee43bbd9.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter hdpe">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1b2dc224fe32fbe7e284f381e84b7660.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter irrigation">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1f4033db4ea5b7be0f38100ff985a7f9.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter spray">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/3aec5aa62db8098f4f657eda476fd6f2.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter irrigation">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/3b46c6e637a781fa36af0339ac2cc3df.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter spray">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/6ef7ac7b1d280ef4548c8daa0c7744d9.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter irrigation">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9a8bfd59cea835d83d71d2b0651ca34c.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter irrigation">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9d5844edf832ee96cfb1c279d1f8cf6d.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter hdpe">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/465f06df2327c84493798805edca6fee.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter spray">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/789e2b5fbb122502b71a5016fde1c978.jpg" class="img-responsive">
+            </div>
+
+            <div class="gallery_product col-lg-4 col-md-4 col-sm-4 col-xs-6 filter sprinkle">
+                <img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/807123c67f313274309e3c0233cfd227.jpg" class="img-responsive">
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>

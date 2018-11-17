@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" />
+
+
+    <style type="text/css">
+        ul {
+            list-style-type: none;
+        }
+
+        li {
+            display: inline-block;
+        }
+
+        input[type="checkbox"][id^="cb"] {
+            display: none;
+        }
+
+        label {
+            border: 1px solid #fff;
+            padding: 10px;
+            display: block;
+            position: relative;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        label::before {
+            background-color: white;
+            color: white;
+            content: " ";
+            display: block;
+            border-radius: 50%;
+            border: 1px solid grey;
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            line-height: 28px;
+            transition-duration: 0.4s;
+            transform: scale(0);
+        }
+
+        label img {
+            height: 250px;
+            width: 250px;
+            transition-duration: 0.2s;
+            transform-origin: 50% 50%;
+        }
+
+        :checked+label {
+            border-color: #ddd;
+        }
+
+        :checked+label::before {
+            content: "✓";
+            background-color: grey;
+            transform: scale(1);
+        }
+
+        :checked+label img {
+            transform: scale(0.9);
+            box-shadow: 0 0 5px #333;
+            z-index: -1;
+        }
+    </style>
+
+
+    <script type="text/javascript">
+        // Este evendo é acionado após o carregamento da página
+
+        $(function () {
+
+
+
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Teste</h1>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <ul>
+                    <li><input type="checkbox" id="cb1" />
+                        <label for="cb1"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/0a874eadfe7338367731d7583ba43047.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb2" />
+                        <label for="cb2"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/01f9d726550098b927b694dfee43bbd9.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb3" />
+                        <label for="cb3"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1b2dc224fe32fbe7e284f381e84b7660.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb4" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/1f4033db4ea5b7be0f38100ff985a7f9.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb5" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/3aec5aa62db8098f4f657eda476fd6f2.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb6" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/3b46c6e637a781fa36af0339ac2cc3df.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb7" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/6ef7ac7b1d280ef4548c8daa0c7744d9.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb6" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9a8bfd59cea835d83d71d2b0651ca34c.jpg" /></label>
+                    </li>
+                    <li><input type="checkbox" id="cb7" />
+                        <label for="cb4"><img src="file:///C:/Users/rfrancisco/Pictures/_/instapics_downloaded/bikini_open11/9d5844edf832ee96cfb1c279d1f8cf6d.jpg" /></label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

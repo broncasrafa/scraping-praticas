@@ -10,17 +10,26 @@
     </title>
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/styles.css">
-
 
     <script src="js/jquery.min.js"></script>
     <script src="js/app-scripts.js"></script>
+    <script src="js/app-selectedImages.js"></script>
+    <script src="js/jquery.blockUI.js"></script>
 
+<style>
+.clsDivImg {
+    max-width: 100%;
+    max-height: 100%;
+}
+.clsImg {
+    height: 340.16px;
+    width: 375px;
+}
+</style>
     <script type="text/javascript">
-        var medias = [];
-
-            
+        var medias = [];            
 
         $(document).ready(function () {
 
@@ -36,6 +45,8 @@
             //------------------------------------------------------------------------------------------------------------------------------------------------------------
 
             /* pesquisar */
+            $('#mensagemModal').text("Carregando, aguarde um momento...");
+
             $('#btnSearch').click(function () {
                 medias = [];
                 $('#divResult').html("");
@@ -53,6 +64,11 @@
                     q = criteria.toLowerCase().split('https://www.instagram.com/')[1];
                     q = q.replace('/', '');
                 }
+                
+                $.blockUI({
+                    message: $('#message'),
+                    css: { width: '275px' }
+                });
 
                 $.ajax({
                     type: 'GET',
@@ -66,11 +82,10 @@
 
                         $('#divInfo').show();
                         $('#lblUsername').text(data.user.username);
-                        $('#lblTotalMedias').text(data.all_medias);
+                        $('#lblTotalMedias').text(formattedNumbers(data.all_medias.toString()));
                         
                         var all_medias = data.all_medias;
-                        var medias_count = data.edges.length;
-
+                        
                         if (all_medias > 12) {
                             $('#divLoadMore').show();
                         }
@@ -89,51 +104,13 @@
                         $('#hdn_csrf_token').val(data.csrf_token);
                         $('#hdn_has_next_page').val(data.page_info.has_next_page);
 
-                        var strHtml = "";
-
-                        for (var i = 0; i < medias_count; i++) {
-                            var media = data.edges[i].node;
-
-                            if(media.__typename == "GraphVideo" && media.is_video == true) {
-                                var video_url = getVideoUrl(media.shortcode);
-                                strHtml += '<div class="cell">';
-                                strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                
-                                strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
-                                strHtml += '    </div>';
-                                strHtml += '</div>';
-                                medias.push(video_url);
-                            } else if(media.__typename == "GraphSidecar") {
-                                var sidecarImages = getSidecarImages(media.shortcode);
-
-                                sidecarImages.edges.forEach(item => {
-                                    var sidecar = item.node;
-                                    if(sidecar.__typename == "GraphVideo" && sidecar.is_video == true) {
-                                        var video_url = sidecar.video_url;
-                                        strHtml += '<div class="cell">';
-                                        strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                        
-                                        strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
-                                        strHtml += '    </div>';
-                                        strHtml += '</div>';
-                                        medias.push(video_url);
-                                    } else {
-                                        strHtml += '<div class="cell">';
-                                        strHtml += '    <img src="' + sidecar.display_url +'" class="responsive-image" style="width:393px; height:393px">';
-                                        strHtml += '</div>';
-                                        medias.push(sidecar.display_url);
-                                    }
-                                });
-                            } else {
-                                strHtml += '<div class="cell">';
-                                strHtml += '    <img src="' + media.display_url +'" class="responsive-image" style="width:393px; height:393px">';
-                                strHtml += '</div>';
-                                medias.push(media.display_url);
-                            }
-                        }
-
+                        var strHtml = createHtmlContentMedias(data);
                         $(strHtml).appendTo('#divResult');
+                        $.unblockUI();
                     },
                     error: function (err) {
                         alert(err.statusText);
+                        $.unblockUI();
                     }
                 });
 
@@ -148,11 +125,17 @@
                 var csrf_token = $('#hdn_csrf_token').val();
                 var userId = $('#hdn_id').val();
                 var params = end_cursor + '/' + rhx_gis + '/' + csrf_token + '/' + userId;
+                
+                $.blockUI({
+                    message: $('#message'),
+                    css: { width: '275px' }
+                });
 
                 $.ajax({
                     type: 'GET',
                     url: '/getInstagramMore/' + params,
                     success: function (data) {
+                        var data = data.data;
 
                         if (data.page_info.has_next_page == false) {
                             $('#divLoadMore').hide();
@@ -162,53 +145,13 @@
                         $('#hdn_end_cursor').val(data.page_info.end_cursor);
                         $('#hdn_has_next_page').val(data.page_info.has_next_page);
                         
-                        var medias_count = data.edges.length;
-
-                        var strHtml = "";
-
-                        for (var i = 0; i < medias_count; i++) {
-                            var media = data.edges[i].node;
-
-                            if(media.__typename == "GraphVideo" && media.is_video == true) {
-                                var video_url = getVideoUrl(media.shortcode);
-                                strHtml += '<div class="cell">';
-                                strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                
-                                strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
-                                strHtml += '    </div>';
-                                strHtml += '</div>';
-                                medias.push(video_url);
-                            } else if(media.__typename == "GraphSidecar") {
-                                var sidecarImages = getSidecarImages(media.shortcode);
-
-                                sidecarImages.edges.forEach(item => {
-                                    var sidecar = item.node;
-                                    if(sidecar.__typename == "GraphVideo" && sidecar.is_video == true) {
-                                        var video_url = sidecar.video_url;
-                                        strHtml += '<div class="cell">';
-                                        strHtml += '    <div class="embed-responsive embed-responsive-16by9" style="width:393px; height:393px">';                                        
-                                        strHtml += '        <video controls><source src="'+ video_url +'" type="video/mp4"></source></video>';
-                                        strHtml += '    </div>';
-                                        strHtml += '</div>';
-                                        medias.push(video_url);
-                                    } else {
-                                        strHtml += '<div class="cell">';
-                                        strHtml += '    <img src="' + sidecar.display_url +'" class="responsive-image" style="width:393px; height:393px">';
-                                        strHtml += '</div>';
-                                        medias.push(sidecar.display_url);
-                                    }
-                                });
-                            } else {
-                                strHtml += '<div class="cell">';
-                                strHtml += '    <img src="' + media.display_url +'" class="responsive-image" style="width:393px; height:393px">';
-                                strHtml += '</div>';
-                                medias.push(media.display_url);
-                            }
-                        }
-
+                        var strHtml = createHtmlContentMedias(data);
                         $(strHtml).appendTo('#divResult');
+                        $.unblockUI();
                     },
                     error: function (err) {
                         alert(err.statusText);
+                        $.unblockUI();
                     }
                 });
             });
@@ -216,25 +159,42 @@
 
             /* baixar fotos */
             $('#btnDownload').click(function () {
-                $.ajax({
-                    type: 'GET',
-                    url: '/downloadFotos',
-                    data: {
-                        'medias': JSON.stringify(medias),
-                        'username': $('#txtSearch').val()
-                    },
-                    success: function (data) {
-                        if ($('#hdn_has_next_page').val() == false) {
-                            medias = [];
+                var mediasDownload = [];
+                $('.image-checkbox').each(function() {
+                    if($(this).find('input[type="checkbox"]').prop('checked')) {
+                        
+                        if($(this).find('img').attr('src') == null) {
+                            var videoUrl = $(this).find('video').find('source').attr('src');
+                            mediasDownload.push(videoUrl);
+                        } else {
+                            var img = $(this).find('img').attr('src')
+                            mediasDownload.push(img);
                         }
-                        alert('Fotos salvas com sucesso');
-                    },
-                    error: function (err) {
-                        medias = [];
-                        alert('Erro ao salvar as fotos');
+                        
                     }
                 })
-            })
+
+                if(mediasDownload.length > 0) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '/downloadFotos',
+                        data: {
+                            'medias': JSON.stringify(mediasDownload),
+                            'username': $('#txtSearch').val()
+                        },
+                        success: function (data) {
+                            if ($('#hdn_has_next_page').val() == false) {
+                                medias = [];
+                            }
+                            alert('Fotos salvas com sucesso');
+                        },
+                        error: function (err) {
+                            medias = [];
+                            alert('Erro ao salvar as fotos');
+                        }
+                    });
+                }
+            });
             //------------------------------------------------------------------------------------------------------------------------------------------------------------
 
         }); // load da pagina
@@ -277,37 +237,77 @@
             shortcode_media = json.graphql.shortcode_media.edge_sidecar_to_children;
             return shortcode_media;
         }
+        
+        function createHtmlContentMedias(data) {
+            var medias_count = data.edges.length;
+
+            var strHtml = "";
+
+            for (var i = 0; i < medias_count; i++) {
+                var media = data.edges[i].node;
+                
+                if(media.__typename == "GraphImage") {                    
+                    strHtml += '<div class="col-xs-12 col-sm-4 col-md-3 nopad text-center clsDivImg">';
+                    strHtml += '    <label class="image-checkbox">';
+                    strHtml += '    <img class="img-responsive clsImg" src="' + media.display_url +'" />';
+                    strHtml += '    <input type="checkbox" name="image[]" value="" />';
+                    strHtml += '    <i class="fa fa-check hidden"></i>';
+                    strHtml += '</div>';
+                    medias.push(media.display_url);
+                } else if (media.__typename == "GraphVideo" && media.is_video == true) {
+                    var video_url = getVideoUrl(media.shortcode);
+                    strHtml += '<div class="col-xs-12 col-sm-4 col-md-3 nopad text-center clsDivImg">';
+                    strHtml += '    <label class="image-checkbox">';
+                    strHtml += '    <div>';                                
+                    strHtml += '        <video controls class="clsImg">';
+                    strHtml += '            <source src="'+ video_url +'" type="video/mp4"></source>';
+                    strHtml += '        </video>';
+                    strHtml += '    </div>';
+                    strHtml += '    <input type="checkbox" name="image[]" value="" />';
+                    strHtml += '    <i class="fa fa-check hidden"></i>';
+                    strHtml += '</div>';
+                    medias.push(video_url);
+                } else if(media.__typename == "GraphSidecar") {
+                    var sidecarImages = getSidecarImages(media.shortcode);
+
+                    sidecarImages.edges.forEach(item => {
+                        var sidecar = item.node;
+                        if(sidecar.__typename == "GraphVideo" && sidecar.is_video == true) {
+                            var video_url = sidecar.video_url;
+                            strHtml += '<div class="col-xs-12 col-sm-4 col-md-3 nopad text-center clsDivImg">';
+                            strHtml += '    <label class="image-checkbox">';
+                            strHtml += '    <div>';                                
+                            strHtml += '        <video controls class="clsImg">';
+                            strHtml += '            <source src="'+ video_url +'" type="video/mp4"></source>';
+                            strHtml += '        </video>';
+                            strHtml += '    </div>';
+                            strHtml += '    <input type="checkbox" name="image[]" value="" />';
+                            strHtml += '    <i class="fa fa-check hidden"></i>';
+                            strHtml += '</div>';
+                            medias.push(video_url);
+                        } else {
+                            strHtml += '<div class="col-xs-12 col-sm-4 col-md-3 nopad text-center clsDivImg">';
+                            strHtml += '    <label class="image-checkbox">';
+                            strHtml += '    <img class="img-responsive clsImg" src="' + sidecar.display_url +'" />';
+                            strHtml += '    <input type="checkbox" name="image[]" value="" />';
+                            strHtml += '    <i class="fa fa-check hidden"></i>';
+                            strHtml += '</div>';
+                            medias.push(sidecar.display_url);
+                        }
+                    });
+                }
+            }
+            return strHtml;
+        }
+
     </script>
 
 </head>
 
 <body>
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-default navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false"
-                    aria-controls="navbar">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="/">Instagram Scraping</a>
-            </div>
-            <div id="navbar" class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li class="active">
-                        <a href="/">Home</a>
-                    </li>
-                    <li>
-                        <a href="/search-from-instagram">Pesquisar no Instagram</a>
-                    </li>
-                </ul>
-            </div>
-            <!--/.nav-collapse -->
-        </div>
-    </nav>
+    <!-- menu -->  
+    <% include partials/_menu.ejs %>
+    
     <div class="container" style="padding-top: 40px">
         <div class="page-header">
             <h1>Pagina inicial</h1>
@@ -340,7 +340,7 @@
                 <span id="lblTotalMedias"></span>
             </h3>
         </div>
-        <div class="grid" id="divResult" style="padding-top: 40px">
+        <div class="row" id="divResult" style="padding-top: 40px">
         </div>
 
         <!-- Botão carregar mais -->
@@ -361,10 +361,16 @@
             </div>
         </div>
 
-        <hr />
-        <footer>
-            <p>&copy; My Instagram Scraping Application</p>
-        </footer>
+        <!-- Modal de carregamento -->
+        <div class="modal-blockUI" id="message">
+            <h3 id="mensagemModal"></h3>
+            <p>
+                <img src="img/loading/insta-load_1.gif" style="width: 50px; height: 50px">
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <% include partials/_footer.ejs %>
     </div>
 </body>
 
