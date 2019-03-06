@@ -14,10 +14,12 @@ module.exports.getSearch = function(k) {
             return reject(new Error('Argument "k" must be specified'));
         }
 
+        var url = settings.XV_BASE_URL + '/?k=' + encodeParameter(k)
         var options = {
-            url: settings.XV_BASE_URL + '/?k=' + encodeParameter(k),
+            url: url,
             method: 'GET'
         };
+        console.log(url)
 
         request(options, function(err, response, body) {
             if(err) {
@@ -81,6 +83,8 @@ module.exports.getSearch = function(k) {
                         obj.video.id = img.attr('data-videoid');
                         obj.video.thumb = img.attr('data-src');
                         obj.video.link = href;
+                        obj.video.url_video_id = href.split('/')[1]
+                        obj.video.url_video_title = href.split('/')[2]
 
                         var has_hd = $(this).find('span.video-hd-mark');
                         obj.video.is_hd = has_hd.text() ? true : false;
@@ -130,15 +134,16 @@ module.exports.getSearch = function(k) {
                         var href = anchor_element.attr('href');
                         obj.profile.name = text;
                         obj.profile.link = href;
-                    });
+                    });                    
 
                     var profileInfoEl = el.find('p.profile-info');
-                    profileInfoEl.filter(function() {
-                        var text = $(this).text().replace(/\n/g, '');//.replace(/ /g,'')
-                        var textsplit = text.split('Channel');
-                        var info = textsplit[1].trim();
-                        obj.profile.info = info;
-                    });
+                    // profileInfoEl.filter(function() {
+                    //     var text = $(this).text().replace(/\n/g, '');//.replace(/ /g,'')
+                    //     console.log(text)
+                    //     var textsplit = text.split('Channel');
+                    //     var info = textsplit[1].trim();
+                    //     obj.profile.info = info;
+                    // });
 
                     var imgEl = el.find('div.thumb-inside > div.thumb > a');
                     imgEl.filter(function() {
@@ -173,7 +178,7 @@ module.exports.getSearch = function(k) {
                         //         console.log(hj);
                         //     }
                         // })
-                        console.log(res[3]);
+                        //console.log(res[3]);
                         
 
                         // var div = document.createElement('div');
@@ -1159,6 +1164,66 @@ module.exports.getBestVideos = function(url) {
             return resolve(objData);
         });
     });
+}
+module.exports.getVideoUrl = function(url) {
+    return new Promise((resolve, reject) => {
+
+        var options = {
+            url: url
+        };
+
+        console.log(url)
+
+        request.get(options, (error, response, body) => {
+            if(error) {
+                reject(new Error('Error while retrieve data page'));
+            }
+
+            if(body == null) {
+                return reject(new Error('Body is empty'));
+            }
+            
+            try {
+                var $ = cheerio.load(body);
+                var scriptTag = $('#main').children('div#content').find('div#video-player-bg').find('script')[4].children[0].data                
+                var str_1 = scriptTag.split('html5player.setVideoUrlHigh(')[1]
+                var str_2 = str_1.split('\');')
+                var video_url = str_2[0].replace('\'', '')
+
+                var str_3 = scriptTag.split('html5player.setVideoTitle(')[1]
+                var str_4 = str_3.split('\');')
+                var video_title = str_4[0].replace('\'', '')
+
+                var str_5 = scriptTag.split('html5player.setThumbUrl(')[1]
+                var str_6 = str_5.split('\');')
+                var video_thumbUrl = str_6[0].replace('\'', '')
+
+                var str_7 = scriptTag.split('html5player.setThumbUrl169(')[1]
+                var str_8 = str_7.split('\');')
+                var video_thumbUrl169 = str_8[0].replace('\'', '')
+
+                var str_9 = scriptTag.split('html5player.setThumbSlide(')[1]
+                var str_10 = str_9.split('\');')
+                var video_thumbSlide = str_10[0].replace('\'', '')
+
+                var str_11 = scriptTag.split('html5player.setThumbSlideBig(')[1]
+                var str_12 = str_11.split('\');')
+                var video_thumbSlideBig = str_12[0].replace('\'', '')
+                                
+                var objData = {
+                    url: video_url,
+                    video_high_qual: $('#html5video_base').children('div').find('a')[2].attribs.href,
+                    video_title: video_title,
+                    video_thumbs: [video_thumbUrl, video_thumbUrl169],
+                    video_mozaiques: [video_thumbSlide, video_thumbSlideBig]
+                }
+                                
+                return resolve(objData);
+            } catch(e) {
+                return reject(new Error(e.message));
+            }
+        })
+    })
 }
 //#endregion
 

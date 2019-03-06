@@ -62,4 +62,22 @@ router.get('/best', (req, res) => {
         });
 });
 
+router.get('/video/url', (req, res) => {
+    var videoId = req.query.urlVideoId;
+    var videoTitle = req.query.urlVideoTitle;
+    var url = `${settings.XV_BASE_URL}/${videoId}/${videoTitle}`
+    
+    XVService.getVideoUrl(url)
+        .then(function(result) {
+            res.status(200).json({ status: 'OK', errors: {}, data: result });
+        })
+        .catch(err => {
+            res.status(400).json({ status: 'ERROR', errors: err.message, data: {} });
+        });
+
+})
+
+
+
+
 module.exports = router;
