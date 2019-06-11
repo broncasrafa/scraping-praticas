@@ -11,6 +11,85 @@ var settings = require('../../config/appConfig');
 var fs = require('fs');
 var rp = require('request-promise');
 
+//#region Tags
+exports.scrapeTagInit = function(tag) {
+    return new Promise((resolve, reject) => {
+        if (!tag) {
+            return reject(new Error('Argument "tag" must be specified'));
+        }
+
+        var url = `https://www.instagram.com/explore/tags/${tag}`
+        var options = {        
+            url: url,
+            method: 'GET',
+            headers: {
+                'User-Agent': settings.user_agent
+            }
+        };
+        console.log('[TAG-init]: ', url);
+        
+        request(options, function(err, response, body) { 
+            if(err) {
+                reject(new Error('Error while retrieve data tag page'));
+            }
+
+            if(body == null) {
+                return reject(new Error('Body is empty'));
+            }
+
+            var data = scrape(body);
+            var rhx_gis = data.rhx_gis;
+            var csrf_token = data.config.csrf_token;
+            var hashtag = data.entry_data.TagPage[0].graphql.hashtag;
+            var json = {
+                rhx_gis: rhx_gis,
+                csrf_token: csrf_token,
+                hashtag: hashtag 
+            }
+
+            return resolve(json);
+        });
+    })
+}
+
+exports.scrapeTagOthers = function(url, signature) {
+    return new Promise((resolve, reject) => {
+        if(!url) {
+            return reject(new Error('Argument "url" must be specified'));
+        }
+
+        var options = {
+            url: url,
+            method: 'GET',
+            headers: {
+                'Cookie': settings.cookie,
+                'User-Agent': settings.user_agent
+            }
+        };
+        console.log('[TAG-Others]: ', url);
+
+        request(options, function(err, response, body) { 
+            if(err) {
+                console.log('[ERROR]', err)
+                reject(new Error('Error while retrieve data user page'));
+            }
+
+            if(body == null) {
+                return reject(new Error('Body is empty'));
+            }
+
+            try {
+                console.log('dsd', body == '')
+                var objData = JSON.parse(body)
+                return resolve(objData);
+            } catch(e) {
+                return reject(new Error(e.message));
+            }
+        });
+    })
+}
+//#endregion
+
 //#region User Data Init, Others
 exports.scrapeUserPageInit = function(username) {
     return new Promise(function(resolve, reject) {
@@ -533,8 +612,11 @@ exports.searchFromInstagram = function(query) {
         if (!query) {
             return reject(new Error('Argument "query" must be specified'));
         }
-        var q = query.replace(' ', '+');
-        var url = `https://www.instagram.com/web/search/topsearch/?context=blended&query=${q}&rank_token=0.7859078765611462`; //0.31090695971357807`;
+        
+        var q = encodeURIComponent(query).replace('%20', '+');
+        //var url = `https://www.instagram.com/web/search/topsearch/?context=blended&query=${q}&rank_token=0.7859078765611462`; //0.31090695971357807`;
+        var url = `https://www.instagram.com/web/search/topsearch/?context=blended&query=${q}&rank_token=0.012232229965238872&include_reel=true`
+        console.log('[SEARCH]:', url)
         request(url, function(error, response, body) {
             if(error) {
                 return reject(new Error('Error while retrieve data'));
@@ -546,6 +628,27 @@ exports.searchFromInstagram = function(query) {
             var json = JSON.parse(body);
             return resolve(json);
         })
+    });
+}
+//#endregion
+
+//#region Location
+exports.scrapeLocation = function(id) {
+    return new Promise(function(resolve, reject){
+        if (!id) return reject(new Error('Argument "id" must be specified'));
+        
+        request(locURL + id, function(err, response, body){
+            var data = scrape(body);
+
+            if (data && data.entry_data && 
+                data.entry_data.LocationsPage[0] && 
+                data.entry_data.LocationsPage[0].location) {
+                resolve(data.entry_data.LocationsPage[0].location);
+            }
+            else {
+                reject(new Error('Error scraping location page "' + id + '"'));
+            }
+        });
     });
 }
 //#endregion
@@ -625,7 +728,7 @@ exports.deepScrapeTagPage = function(tag) {
             });
         })
         .catch(function(err) {
-                console.log("An error occurred calling scrapeTagPage inside deepScrapeTagPage" + ":" + err);
+            console.log("An error occurred calling scrapeTagPage inside deepScrapeTagPage" + ":" + err);
         });        
     });
 };
@@ -672,26 +775,7 @@ exports.scrapeTag = function(tag) {
 };
 //#endregion
 
-//#region Location
-exports.scrapeLocation = function(id) {
-    return new Promise(function(resolve, reject){
-        if (!id) return reject(new Error('Argument "id" must be specified'));
-        
-        request(locURL + id, function(err, response, body){
-            var data = scrape(body);
 
-            if (data && data.entry_data && 
-                data.entry_data.LocationsPage[0] && 
-                data.entry_data.LocationsPage[0].location) {
-                resolve(data.entry_data.LocationsPage[0].location);
-            }
-            else {
-                reject(new Error('Error scraping location page "' + id + '"'));
-            }
-        });
-    });
-}
-//#endregion
 
 
 

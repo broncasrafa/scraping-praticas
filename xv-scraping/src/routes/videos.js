@@ -75,9 +75,23 @@ router.get('/video/url', (req, res) => {
             res.status(400).json({ status: 'ERROR', errors: err.message, data: {} });
         });
 
+});
+
+// https://www.xvideos.com/video45565379/jessica_correa_-_mansao_das_coelhinhas
+
+// https://www.xvideos.com/video43869177/thick_ass_milf_takes_it_up_her_ass
+router.get('/video', (req, res) => {
+    var videoId = req.query.url_video_id
+    var titleId = req.query.url_video_title
+
+    XVService.getVideo(videoId, titleId)
+        .then(function(result) {
+            res.status(200).json({ status: 'OK', errors: {}, data: result });
+        })
+        .catch(err => {
+            res.status(400).json({ status: 'ERROR', errors: err.message, data: {} });
+        });
 })
-
-
 
 
 module.exports = router;

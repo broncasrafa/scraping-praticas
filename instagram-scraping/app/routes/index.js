@@ -84,9 +84,9 @@ router.get('/getInstagramMore/:end_cursor/:rhx_gis/:csrf_token/:userId', (req, r
     var rhx_gis = req.params.hrx_gis;
     var csrf_token = req.params.csrf_token;
     var userId = req.params.userId;
-    var data = `${rhx_gis}:{"id":"${userId}","first":${first},"after":"${after}"}`; 
-    var signature = crypto.createHash('md5').update(data).digest("hex");
-    var url = url = 'https://www.instagram.com/graphql/query/?query_hash=50d3631032cf38ebe1a2d758524e3492&variables=%7B%22id%22%3A%22' + userId + '%22%2C%22first%22%3A'+ first +'%2C%22after%22%3A%22' + after + '%22%7D';
+    var variables = `${rhx_gis}:{"id":"${userId}","first":${first},"after":"${after}"}`; 
+    var signature = crypto.createHash('md5').update(variables).digest("hex");
+    var url = 'https://www.instagram.com/graphql/query/?query_hash=50d3631032cf38ebe1a2d758524e3492&variables=%7B%22id%22%3A%22' + userId + '%22%2C%22first%22%3A'+ first +'%2C%22after%22%3A%22' + after + '%22%7D';
 
     instagram.scrapeUserPageOther(url, signature)
         .then((result) => { res.status(200).json({ status: 'OK', errors: {}, data: result }); })
@@ -177,10 +177,51 @@ router.get('/search-from-instagram', (req, res, next) => {
 
 router.get('/getInstagramTopSearch/:query', (req, res, next) => {
     var query = req.params.query;
+    console.log('QUERY: ', query)
 
     instagram.searchFromInstagram(query).then(function(data) {        
         res.status(200).json(data);
     }).catch(err => { res.status(400).json({ message: 'Não foi possivel retornar os dados' }) })
+})
+//#endregion
+
+//#region Tag
+router.get('/explore-tag/:tag', (req, res, next) => {    
+    var tag = req.params.tag;
+        
+    instagram.scrapeTagInit(tag).then(function(data) {        
+        console.log(data)
+        res.render('explore-tag', {
+            title: `${data.hashtag.name} (@${ data.hashtag.name }) • Fotos e vídeos do Instagram`,
+            data: data
+        });
+
+    }).catch(err => { res.status(400).json({ message: 'Não foi possivel retornar os dados: ' + err.message }) })
+});
+
+router.get('/getInstagramTag/:tag', (req, res, next) => {
+    var tag = req.params.tag;
+        
+    instagram.scrapeTagInit(tag).then(function(data) {        
+        res.status(200).json(data);
+    }).catch(err => { res.status(400).json({ message: 'Não foi possivel retornar os dados' }) })
+})
+
+router.get('/getInstagramTagOthers/:tag', (req, res, next) => {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+    var first = '2';
+    var after = req.query.end_cursor;
+    var rhx_gis = req.query.hrx_gis;
+    var csrf_token = req.query.csrf_token;
+    var tag_name = req.params.tag;
+    var variables = `${rhx_gis}:{"tag_name":"${tag_name}","show_ranked":"false","first":${first},"after":"${after}"}`;
+    var signature = crypto.createHash('md5').update(variables).digest('hex');
+    var url = `https://www.instagram.com/graphql/query/?query_hash=f92f56d47dc7a55b606908374b43a314&variables=%7B%22tag_name%22%3A%22${tag_name}%22%2C%22show_ranked%22%3Afalse%2C%22first%22%3A${first}%2C%22after%22%3A%22${after.replace('==', '%3D%3D')}%22%7D`;
+    
+    instagram.scrapeTagOthers(url, signature)
+        .then((result) => { res.status(200).json({ status: 'OK', errors: {}, data: result }); })
+        .catch(err => { res.status(400).json({ status: 'ERROR', errors: 'Erro ao retornar os dados: ' + err.message, data: {}}); })
 })
 //#endregion
 

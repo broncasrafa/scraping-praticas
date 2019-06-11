@@ -7,14 +7,17 @@ require('./stringops');
 
 
 //#region Search
-// semi feito
-module.exports.getSearch = function(k) {
+module.exports.getSearch = function(k, page = 0) {
     return new Promise(function(resolve, reject) {
         if(!k) {
             return reject(new Error('Argument "k" must be specified'));
         }
 
         var url = settings.XV_BASE_URL + '/?k=' + encodeParameter(k)
+        if(page > 0) {
+            url = `${url}&p=${page}`
+        }
+        
         var options = {
             url: url,
             method: 'GET'
@@ -30,15 +33,29 @@ module.exports.getSearch = function(k) {
                 return reject(new Error('Body is empty'));
             }
 
-            // var html = fs.readFileSync('pages-examples/search-mia.html');
-            // var body = html.toString('utf8');
             var $ = cheerio.load(body);
 
             var objData = {};
             objData.relatedSearches = [];
-            objData.pagination = [];
+            objData.has_next_page = false;
             objData.content = [];
 
+            //#region Paginação
+            var has_pagination = $('#content').find('div.pagination').length > 0
+            if(has_pagination) {
+                $('#content').find('div.pagination').children('ul').find('li').each(function(i, item) {
+                    var elem = $(this)
+                    var classname = elem.find('a').attr('class')
+                    if(classname != undefined) {
+                        if(classname.includes('next-page')) { 
+                            has_next_page = true
+                            objData.has_next_page = true
+                        }
+                    }
+                })
+            }
+            //#endregion            
+            
             //#region Title
             var titleResult = $('.page-title').text().trim();
             titleResult = titleResult.replace(/(\r\n\t|\n|\r\t)/gm,"");
@@ -48,15 +65,18 @@ module.exports.getSearch = function(k) {
             //#endregion
             
             //#region Related searches
-            var relatedSearches = $('#search-associates').find('a');        
-            relatedSearches.filter(function() {
-                var anchor_element = $(this);
-                var text = anchor_element.text();
-                var href = anchor_element.attr("href");
-                if(text.indexOf('Mais...') < 0) {
-                    objData.relatedSearches.push({ text: text, href: href})
+            $('#search-associates').find('span').each(function(i, item) {
+                var elem = $(this)
+                var classname = elem.attr('class')
+                if(!(classname.includes('show-more'))) {
+                    var label = elem.find('a').text()
+                    var href = elem.find('a').attr('href')
+                    var split_1 = href.split('/?k=')[1]
+                    var id = split_1.split('&')[0]
+
+                    objData.relatedSearches.push({ label: label, id: id})
                 }
-            });
+            })
             //#endregion
             
             //#region Conteudo
@@ -82,9 +102,23 @@ module.exports.getSearch = function(k) {
                         var href = anchor_element.attr('href');
                         obj.video.id = img.attr('data-videoid');
                         obj.video.thumb = img.attr('data-src');
+                        
                         obj.video.link = href;
                         obj.video.url_video_id = href.split('/')[1]
                         obj.video.url_video_title = href.split('/')[2]
+
+                        // gerar o link do preview do video
+                        var url = img.attr('data-src')
+                        var split_jpg = url.split('.jpg')[0]
+                        var split_url = split_jpg.split('.')
+                        var val_1 = split_url[2].split('/')[3]
+                        var val_2 = split_url[2].split('/')[4]
+                        var val_3 = split_url[2].split('/')[5]
+                        var val_4 = split_url[2].split('/')[6]
+                        var arr = [ val_1, val_2, val_3, val_4 ]
+                        var str = arr.join('/')
+                        var link_preview = `https://img-egc.xvideos-cdn.com/videos/videopreview/${str}_169.mp4`                        
+                        obj.video.link_preview = link_preview
 
                         var has_hd = $(this).find('span.video-hd-mark');
                         obj.video.is_hd = has_hd.text() ? true : false;
@@ -192,21 +226,8 @@ module.exports.getSearch = function(k) {
 //                 var text = filho.innerHTML.match(/<script.*?>([\s\S]*?)<\/script>/gmi);
                 objData.content.push(obj);
             });
-            //#endregion
+            //#endregion              
 
-            //#region Paginação
-            var paginationResult = $('.pagination-with-settings .pagination').find('a');
-            paginationResult.filter(function() {
-                var anchor_element = $(this);
-                var page = anchor_element.text();
-                var href = anchor_element.attr("href");
-                
-                if(page != "Próximo" && page != 'Anterior' && href.length > 0) {
-                    objData.pagination.push({ page: page, link: href});
-                }
-            });
-            //#endregion
-            
             return resolve(objData);
         });
     });
@@ -217,8 +238,10 @@ module.exports.getSearchSuggest = function(criteria) {
             return reject(new Error('Argument "criteria" must be specified'));
         }
         
+        var url = settings.XV_BASE_URL + '/search-suggest/' + encodeURI(criteria)
+        console.log(url)
         var options = {
-            url: settings.XV_BASE_URL + '/search-suggest/' + encodeURI(criteria),
+            url: url,
             method: 'GET'
         };
 
@@ -457,6 +480,8 @@ module.exports.getPornActresses = function(url) {
             url: url,
             method: 'GET'
         };
+        console.log(url)
+        
         request.get(options, (error, response, body) => {
             try {
                 var objData = scrapePornActressesList(error, body);
@@ -1032,6 +1057,8 @@ module.exports.getVerifiedVideos = function(page = null) {
             url = baseUrl + '/' + page;
         }
 
+        console.log(url)
+
         var options = {
             url: url,
             method: 'GET'
@@ -1103,6 +1130,8 @@ module.exports.getBestVideos = function(url) {
             url: url,
             method: 'GET'
         };
+
+        console.log(url)
 
         request(options, function(err, response, body) {
             if(err) {
@@ -1219,6 +1248,46 @@ module.exports.getVideoUrl = function(url) {
                 }
                                 
                 return resolve(objData);
+            } catch(e) {
+                return reject(new Error(e.message));
+            }
+        })
+    })
+}
+module.exports.getVideo = function(videoId, titleId) {
+    return new Promise((resolve, reject) => {
+        if(!videoId) {
+            return reject(new Error('Argument "url_video_id" must be specified'));
+        }
+
+        if(!titleId) {
+            return reject(new Error('Argument "url_video_title" must be specified'));
+        }
+
+        var url = `${settings.XV_BASE_URL}/${videoId}/${titleId}`
+
+        var options = {
+            url: url
+        };
+
+        console.log(url)
+
+        request.get(options, (error, response, body) => {
+            if(error) {
+                reject(new Error('Error while retrieve data page'));
+            }
+
+            if(body == null) {
+                return reject(new Error('Body is empty'));
+            }
+
+            try {
+                var objData = {
+                    id: '',
+                    title: '',
+                    duration: '',
+                    tags: []
+                }
             } catch(e) {
                 return reject(new Error(e.message));
             }

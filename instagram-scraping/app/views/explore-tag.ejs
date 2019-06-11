@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="shortcut icon" href="../img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/toastr.css">
+
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/app-scripts.js"></script>
+    <script src="../js/app-selectedImages.js"></script>
+    <script src="../js/jquery.blockUI.js"></script>
+    <script src="../js/toastr.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+
+
+            $('#btnLoadMore').click(function() {
+
+            })
+
+            
+        });
+    </script>
+</head>
+
+<body>
+    <!-- menu -->
+    <% include partials/_menu.ejs %>
+
+    <%
+        var hashtag = data.hashtag;
+        var edge_hashtag_to_media = hashtag.edge_hashtag_to_media;
+        var edge_hashtag_to_top_posts = hashtag.edge_hashtag_to_top_posts;
+    
+    %>
+
+    <div class="bs-docs-header" style="background-color:#ffffff; padding-top: 40px">
+        <div class="container">
+            <div class="row" style="margin-top: 40px; padding-bottom: 25px">
+                <div class="col-md-2">
+                    <img class="img img-circle" alt="" src="<%= hashtag.profile_pic_url %>" />
+                </div>
+                <div class="col-md-10">
+                    <h2>
+                        <%= hashtag.name %>
+                    </h2>
+                    <p class="lead">
+                        <%= edge_hashtag_to_media.count %> publicações
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container" style="padding-top: 40px">
+        <div class="row" id="divResult" style="padding-top: 40px">
+            <% 
+                var top_medias = edge_hashtag_to_top_posts.edges;
+                
+                for(var i = 0; i < top_medias.length; i++) { 
+                    var media = top_medias[i].node
+            %>
+                <div class="col-md-3" style="padding-bottom: 20px; max-width: 100%; max-height: 100%;">
+                    <img src="<%= media.display_url %>" class="responsive-image" style="width:243px; height:243px">
+                </div>
+            <% } %>
+
+            <% 
+                var medias = edge_hashtag_to_media.edges;
+                
+                for(var i = 0; i < medias.length; i++) { 
+                    var media = medias[i].node
+            %>
+                <div class="col-md-3" style="padding-bottom: 20px; max-width: 100%; max-height: 100%;">
+                    <img src="<%= media.display_url %>" class="responsive-image" style="width:243px; height:243px">
+                </div>
+            <% } %>
+
+            <input type="hidden" name="hdn_end_cursor" id="hdn_end_cursor" value="<%= edge_hashtag_to_media.page_info.end_cursor %>" />            
+            <input type="hidden" name="hdn_has_next_page" id="hdn_has_next_page" value="<%= edge_hashtag_to_media.page_info.has_next_page %>" />
+            <input type="hidden" name="hdn_id" id="hdn_id" value="<%= hashtag.id %>" />
+            <input type="hidden" name="hdn_rhx_gis" id="hdn_rhx_gis" value="<%= data.rhx_gis %>" />
+            <input type="hidden" name="hdn_csrf_token" id="hdn_csrf_token" value="<%= data.csrf_token %>" />
+            
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="text-center">
+                    <button class="btn btn-success" id="btnLoadMore">Carregar mais</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <% include partials/_footer.ejs %>
+    </div>
+</body>
+
+</html>

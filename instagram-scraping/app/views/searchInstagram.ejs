@@ -26,10 +26,11 @@
                 }
 
                 var query = $('#txtSearch').val();
+                var q = encodeURIComponent(query).replace('%20', '+');
 
                 $.ajax({
                     type: 'GET',
-                    url: '/getInstagramTopSearch/' + query,
+                    url: '/getInstagramTopSearch/' + q,
                     success: function (data) {
                         if(data == null) {
                             return;
@@ -94,7 +95,7 @@
                                 var hashtag = h.hashtag;
                                 htmlStr += '    <div class="col-md-6">';
                                 htmlStr += '        <div class="form-group">';
-                                htmlStr += '            <span class="_hashtag">#'+ hashtag.name +'</span><br />';
+                                htmlStr += '            <span class="_hashtag"><a href="/explore-tag/'+ hashtag.name + '">#'+ hashtag.name +'</a></span><br />';
                                 htmlStr += '            <span class="_hashtag__media_count">' + formatNumber(hashtag.media_count) + ' publicações</span>'; 
                                 htmlStr += '        </div>';
                                 htmlStr += '    </div>';
@@ -105,7 +106,7 @@
                         $(htmlStr).appendTo('#divResult');
                     },
                     error: function (err) {
-                        alert('Erro ao recuperar os dados do Instagram')
+                        alert('Erro ao recuperar os dados do Instagram: ' + err.responseJSON.errors.message)
                     }
                 });
             })

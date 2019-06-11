@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <% include ../partials/_head %>
+    </head>
+<body class="container">
+    <header>
+        <% include ../partials/_nav %>
+    </header>
+    <main>
+        <div class="page-header">
+            <h1>Download</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadStars">Baixar Stars</button>                
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadFilmes">Baixar Filmes</button>                
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadVideos">Baixar Videos</button>                
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadEnsaios">Baixar Ensaios</button>                
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-danger" id="btnDownloadWallpapers">Baixar Wallpapers</button>                
+            </div>
+        </div>
+    </main>
+    <!-- Modal de carregamento -->
+    <div class="modal-blockUI" id="message">
+        <h3 id="mensagemModal"></h3>
+        <p>
+            <img src="images/loading/loading1.gif" style="width: 80px; height: 80px">
+        </p>
+    </div>
+
+
+    <hr />
+    <footer>
+        <% include ../partials/_footer %>
+    </footer>
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            $('#btnDownloadStars').click(function(e) {
+                e.preventDefault();
+                $('.loading_ico').prop('display', 'block')
+
+                var pornstars = []
+                var has_next_page = true;
+                var page = 1
+                var result = getPornstars(null)
+                var dataInit = result.data;
+                
+                dataInit.pornstars.forEach(star => {
+                    pornstars.push(star)
+                });
+
+                if(dataInit.page_info.has_next_page) {
+                    do {
+                        page++;
+                        var resultOthers = getPornstars(page);
+                        var dataOthers = resultOthers.data;
+
+                        if(resultOthers.data.pornstars != undefined &&
+                           resultOthers.status != "ERROR") {
+                            if(!dataOthers.page_info.has_next_page) {
+                                has_next_page = false;
+                            }
+
+                            dataOthers.pornstars.forEach(star => {
+                                pornstars.push(star)
+                            });
+                        } else {
+                            has_next_page = false;
+                        }
+                        
+                    } while(has_next_page)
+                }
+                $('.loading_ico').prop('display', 'none')
+
+                console.log('Total de ' + pornstars.length + ' pornstars');
+                var json = salvarPornstar(pornstars)
+                console.log(json);
+            });
+
+            $('#btnDownloadEnsaios').click(function(e) {
+                e.preventDefault();
+                $('.loading_ico').prop('display', 'block')
+
+                //#region  Carregar todas as pornstars
+                var pornstars = []
+                var has_next_page = true;
+                var page = 1
+                var result = getPornstars(null)
+                var dataInit = result.data;
+                
+                dataInit.pornstars.forEach(star => {
+                    pornstars.push(star)
+                });
+
+                if(dataInit.page_info.has_next_page) {
+                    do {
+                        page++;
+                        var resultOthers = getPornstars(page);
+                        var dataOthers = resultOthers.data;
+
+                        if(resultOthers.data.pornstars != undefined &&
+                           resultOthers.status != "ERROR") {
+                            if(!dataOthers.page_info.has_next_page) {
+                                has_next_page = false;
+                            }
+
+                            dataOthers.pornstars.forEach(star => {
+                                pornstars.push(star)
+                            });
+                        } else {
+                            has_next_page = false;
+                        }
+                        
+                    } while(has_next_page)
+                }
+                $('.loading_ico').prop('display', 'none')
+
+                console.log('Total de ' + pornstars.length + ' pornstars');
+                //#endregion
+
+                for(var i = 0; i < pornstars.length; i++) {
+                    //#region obter os ensaios
+                    var star = pornstars[i];
+                    //console.log('Total de ' + fotos.length + ' fotos do ensaio da pornstars ' + star.id + ' - ' + star.name);
+                    var json = salvarPornstarEnsaio(star.id)
+                    console.log(json);
+                    //#endregion
+                }
+            });
+
+
+
+
+
+
+
+
+
+
+
+
+
+        });
+    </script>
+</body>
+</html>

@@ -18,16 +18,17 @@ router.get('/search-suggest', (req, res) => {
 });
 
 router.get('/', (req, res) => {
-    var search = req.query.k;
+    var k = req.query.k;
+    var page = req.query.page
     
-    XVService.getSearch(search)
+    XVService.getSearch(k, page)
         .then(function(data) {
             res.status(200).json({ status: 'OK', errors: {}, data: data });
         })
         .catch(err => {
             res.status(400).json({ 
                 status: 'ERROR', 
-                errors: {}, 
+                errors: err.message, 
                 data: {}
             });
         });

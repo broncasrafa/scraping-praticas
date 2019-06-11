@@ -2,7 +2,7 @@ var SEXYCLUB_URL = 'https://sexyclube.uol.com.br';
 
 module.exports = {
     SEXY_MODEL_URL: SEXYCLUB_URL,
-    SEXY_MODELS_URL: SEXYCLUB_URL + '/category/tudo-sexy/mulheres/sexy-models',
+    SEXY_MODELS_URL: SEXYCLUB_URL + '/category/tudo-sexy/',
     CAPAS_SEXY_URL:  SEXYCLUB_URL + '/category/tudo-sexy/mulheres/capas-sexy',
     HOT_GIRLS_URL: SEXYCLUB_URL +   '/category/tudo-sexy/mulheres/hot-girls',
     SEXY_GIRLS_URL: SEXYCLUB_URL +  '/category/tudo-sexy/sexy-girls',
